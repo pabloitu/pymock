@@ -6,4 +6,10 @@ COPY . .
 
 RUN pip install -e .
 
-EXPOSE 5000
+RUN groupadd docker && \
+    useradd -g docker modeler
+
+USER modeler
+
+
+

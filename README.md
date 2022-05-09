@@ -5,25 +5,13 @@ Mock-up *dummy* model to build the experiment system
 
 ## Build docker
 ```
-docker build {user}/mockup .
+docker build -t {user}/mockup .
 ```
 
-## Insert catalog/Modify parameter into image
-pending
-
-## Run docker
+## Run docker and create forecast
 ```
-docker run -it --name mockup {user}/mockup bash
+docker run --rm --volume {model_path}/mockup/:/usr/src/mockup:rw {user}/mockup python run.py
 ```
 
 
-## Create forecast
-```
-cd source
-python run.py
-```  
-
-## Retrieve forecast files
-
-pending
 
