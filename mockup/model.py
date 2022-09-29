@@ -38,8 +38,11 @@ def write_forecast(date, forecast):
                     file_.write(line)
 
 
-def make_forecast(catalog, params, n_sims=1):
+def make_forecast(catalog, params, n_sims=1, seed=None):
 
+    # set seed for pseudo-random number gen
+    if seed:
+        numpy.random.seed(seed)
     # filter catalog
     catalog = numpy.array([i for i in catalog if i[3] < params['end_date']])
 
