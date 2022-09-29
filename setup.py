@@ -7,7 +7,7 @@ setup(
     author_email='pciturri@gfz-potsdam.de',
     license='LICENSE',
     description='Mock-up model for the Italy Experiment',
-    install_requires=['numpy==1.21.5'],
+    install_requires=['numpy==1.21.5', 'matplotlib', 'pytest'],  # << Dependencies
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.7",
