@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import numpy
-import os
-import mockup
+
 
 def load_cat(path):
     catalog = []
@@ -15,6 +14,7 @@ def load_cat(path):
 
     return numpy.array(catalog)
 
+
 def read_params(path):
     params = {'start_date': None, 'end_date': None }
     with open(path) as f_:
@@ -26,28 +26,31 @@ def read_params(path):
                 params['end_date'] = datetime.strptime(line_[1], f'%Y/%m/%d %H:%M:%S')
     return params
 
+
 def write_forecast(date, forecast):
 
-
     with open(f'./forecasts/mockup_{date.date().isoformat()}.txt', 'w') as file_:
-        file_.write('lon,lat,M,time_string,depth,catalog_id, event_id\n')
+        file_.write('lon, lat, M, time_string, depth, catalog_id, event_id\n')
         for i in range(len(forecast)):
             for syn_cat in forecast:
                 for event in syn_cat:
                     line = f'{event[0]},{event[1]},{event[2]},{date.isoformat()},{event[4]},{i},\n'
                     file_.write(line)
 
+
 def make_forecast(catalog, params, n_sims=1):
 
     # filter catalog
-    catalog = numpy.array([i for i in catalog if i[3] < params['start_date']])
-    # Get daily rate
-    rate = len(catalog)/(max(catalog[:, 3]) - min(catalog[:, 3])).days
+    catalog = numpy.array([i for i in catalog if i[3] < params['end_date']])
 
-    # Create mockup forecast, as random poisson selection of input_catalog
+    # Get rate from the previous time window. If mu == 0, a minimum of 1 is set
+    mu = numpy.sum([i >= params['start_date'] for i in catalog[:, 3]]) or 1
+
+    # The model creates a random selection of N events from the total input_catalog
+    # A simulated catalog has N_events ~ Poisson(rate_prevday)
     forecast = []
     for i in range(n_sims):
-        n_events = numpy.random.poisson(rate)
+        n_events = numpy.random.poisson(mu)
         syn_cat = numpy.array(random.sample(list(catalog), k=n_events))
         forecast.append(syn_cat)
 
