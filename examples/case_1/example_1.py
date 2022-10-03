@@ -27,7 +27,7 @@ from run import run_model
 # Load catalog
 # ------------
 #
-# PyCSEP provides access to the ComCat web API using :func:`csep.query_comcat` and to the Bollettino Sismico Italiano
+# PyCSEP provides access to th;``e ComCat web API using :func:`csep.query_comcat` and to the Bollettino Sismico Italiano
 # API using :func:`csep.query_bsi`. These functions require a :class:`datetime.datetime` to specify the start and end
 # dates.
 

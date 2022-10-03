@@ -89,7 +89,7 @@ def make_forecast(catalog, params, n_sims=1, seed=None):
         for i, event in enumerate(random_cat):
             # Positions remains the same as the random catalog
             # Get the magnitude value using GR with b=1
-            mag_bins = numpy.arange(5, 8.1, 0.1)
+            mag_bins = numpy.arange(mag_min, 8.1, 0.1)
             prob_mag = 10 ** (-mag_bins[:-1]) - 10 ** (-mag_bins[1:])
             mag = numpy.random.choice(mag_bins[:-1], p=prob_mag / numpy.sum(prob_mag))
             event[2] = mag
