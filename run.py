@@ -7,16 +7,19 @@ from datetime import datetime, timedelta
 def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=None):
     """
     Main run function
-    Wraps the main steps of creating a forecast for a time window.
+    Wraps the main steps of creating a forecast for a given time window.
     1.- Reads a catalog
     2.- Gets the parameters (e.g. forecast dates)
-    3.- Creates the forecast in synthetic catalog format
+    3.- Creates the forecast as synthetic catalogs
     4.- Writes the synthetic catalogs
 
     params:
         start_date (str): Start of the forecast. If None, tries to read from parameters.txt
         dt (int):  time interval of the forecast, in days
+        mag_min (float): Forecast minimum magnitude
+        nsims (int): Number of synthetic catalogs
         seed (int): pseudo_random number seed
+        folder (str): where to save forecasts. Defaults to current path
     """
 
     # Create forecasts folder in current directory if it does not exist.
@@ -47,14 +50,11 @@ if __name__ == '__main__':
     # Reads arguments passed to this python file run.py.
     args = sys.argv
     if len(args) == 1:
-        # This file was run as python run.py
+        # This file was run as `python run.py`
         print('Running using parameter file')
-    else:
-        # This file was run as python run.py ${datetime}
+    elif len(args) > 1:
+        # This file was run as `python run.py ${datetime}`
         print('Running using input datetime')
 
     # Run the model, passing the unpacked arguments, if any.
     run_model(*args[1:])
-    # Note if the modeler prefers to work with a parameter file, this can be just
-    # run()
-    # where the parameter file is read within.
