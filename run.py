@@ -15,7 +15,7 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=No
 
     params:
         start_date (str): Start of the forecast. If None, tries to read from parameters.txt
-        dt (int):  time interval of the forecast, in days
+        dt (float/str):  time interval of the forecast, in days
         mag_min (float): Forecast minimum magnitude
         nsims (int): Number of synthetic catalogs
         seed (int): pseudo_random number seed
@@ -25,28 +25,32 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=No
     # Create forecasts folder in current directory if it does not exist.
     os.makedirs(folder or 'forecasts', exist_ok=True)
 
-    # 1. Reads input catalog
-    cat_path = os.path.join(os.path.dirname(__file__), 'input', 'iside')
+    # 1. Reads input catalog. Defaults to a catalog with path in ${currentpath}/input/iside
+    #  * Can be added as extra argument
+    cat_path = os.path.join('input', 'iside')
     catalog = model.load_cat(path=cat_path)
 
-    # 2. Set up input parameters. In this case, only start date / end_date is needed
+    # 2. Set up input and model parameters.
     if not start_date:
-        params = model.read_params('parameters.txt')
+        # If no start_date is passed, model tries to read from a parameters.txt file found in the directory
+        params = model.read_params('parameters.txt')  # A dict containing start_date, end_date and mag_min
+        nsims = params.get('nsims', nsims)  # Check if nsims and seed are in parameters.txt. If not, uses defaults
+        seed = params.get('seed', seed)
     else:
         start_date = datetime.fromisoformat(start_date)
+        # Creates a params dictionary using the parameters passed
         params = {'start_date': start_date,
-                  'end_date': start_date + timedelta(dt),
-                  'mag_min': mag_min}
+                  'end_date': start_date + timedelta(float(dt)),
+                  'mag_min': float(mag_min)}
 
     # 3. Run model
-    forecast = model.make_forecast(catalog, params, n_sims=nsims, seed=seed)
+    forecast = model.make_forecast(catalog, params, n_sims=int(nsims), seed=int(seed) if seed else seed)
 
     # 4. Write forecasts
     model.write_forecast(params['start_date'], forecast, folder)
 
 
-if __name__ == '__main__':
-
+def run():
     # Reads arguments passed to this python file run.py.
     args = sys.argv
     if len(args) == 1:
@@ -58,3 +62,7 @@ if __name__ == '__main__':
 
     # Run the model, passing the unpacked arguments, if any.
     run_model(*args[1:])
+
+
+if __name__ == '__main__':
+    run()

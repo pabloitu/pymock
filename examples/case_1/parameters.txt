@@ -1,0 +1,6 @@
+forecastStartDate = 2010/1/1 00:00:00
+forecastEndDate = 2010/1/2 00:00:00
+mag_ming = 4.0
+nsims = 10000
+seed = 23
+

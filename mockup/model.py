@@ -4,6 +4,12 @@ import numpy
 import os
 
 
+def syncat_path(date, folder):
+    if isinstance(date, str):
+        date = datetime.fromisoformat(date)
+    return os.path.join(folder, f'mockup_{date.date().isoformat()}.txt')
+
+
 def load_cat(path):
     catalog = []
     with open(path) as f_:
@@ -19,7 +25,7 @@ def load_cat(path):
 def write_forecast(date, forecast, folder=None):
     if folder is None:
         folder = 'forecasts'
-    with open(os.path.join(folder, f'mockup_{date.date().isoformat()}.txt'), 'w') as file_:
+    with open(syncat_path(date, folder), 'w') as file_:
         file_.write('lon, lat, M, time_string, depth, catalog_id, event_id\n')
         for event in forecast:
             line = f'{event[0]},{event[1]},{event[2]:.2f},{event[3].isoformat()},{event[4]},{event[5]},{event[6]}\n'
@@ -37,6 +43,10 @@ def read_params(path):
                 params['end_date'] = datetime.strptime(line_[1], f'%Y/%m/%d %H:%M:%S')
             elif line_[0] == 'mag_min':
                 params['mag_min'] = float(line_[1])
+            elif line_[0] == 'nsims':
+                params['nsims'] = float(line_[1])
+            elif line_[0] == 'seed':
+                params['seed'] = float(line_[1])
     return params
 
 
