@@ -3,6 +3,18 @@
 Mock-up *dummy* model. It serves as template for models competing in the Earthquake Forecasting Experiment
 for Italy
 
+## Install in virtual environment
+
+Simply install in a python venv
+
+```
+python -m venv venv
+source venv/bin/activate
+pip install -e .
+```
+
+Using Docker is preferred, as described in the following section
+
 ## Docker build
 
 Builds the docker container setting permissions for current user (see `Dockerfile`)
