@@ -3,15 +3,21 @@
 Mock-up *dummy* model to build the experiment system
 
 
-## Build docker
+## Docker build
+
 ```
-docker build -t {user}/mockup_py .
+docker build \
+--build-arg USERNAME=$USER \
+--build-arg USER_UID=$(id -u) \
+--build-arg USER_GID=$(id -g) \
+--no-cache \
+-t mockup .
 ```
 
-## Run docker and create forecast
-```
-docker run --rm --volume {model_path}/mockup_py/:/usr/src/mockup_py:rw {user}/mockup_py python run.py
-```
+## Docker run
 
+```
+docker run --rm --volume $PWD:/usr/src/mockup:rw mockup python run.py
+```
 
 
