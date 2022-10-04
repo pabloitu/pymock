@@ -5,12 +5,13 @@ for Italy
 
 ## Install in virtual environment
 
-Simply install in a python venv
+Simply install and run in a python venv
 
 ```
 python -m venv venv
 source venv/bin/activate
 pip install -e .
+python run.py
 ```
 
 Using Docker is preferred, as described in the following section
@@ -28,9 +29,9 @@ docker build \
 -t mockup .
 ```
 
-## Example run
+## Model run
 
-### Simple run using python and parameters.txt
+### Run using python in Docker, and a parameters.txt file
 
 Runs python from the docker image, the model interface (`run.py`), which reads the file `parameters.txt`
 (see `run.run_model()`, lines 34-38)
@@ -39,7 +40,7 @@ Runs python from the docker image, the model interface (`run.py`), which reads t
 docker run --rm --volume $PWD:/usr/src/mockup:rw mockup python run.py
 ```
 
-### Simple run using binary file and parameters.txt
+### Run using binary file and parameters.txt
 
 Runs the model using the binary created from `setup.py`.
 
@@ -47,7 +48,7 @@ Runs the model using the binary created from `setup.py`.
 docker run --rm --volume $PWD:/usr/src/mockup:rw mockup run
 ```
 
-### Simple run using binary and passing arguments from terminal
+### Run using binary and passing arguments from terminal
 
 Runs the binary using arguments passed from the terminal (preferred way). See function `run.run()` and examples/case_1
 
