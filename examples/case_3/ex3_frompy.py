@@ -1,17 +1,19 @@
 """
-.. example_long_forecast
+.. example_intense_forecast
 
-Simple simulation of daily forecast for one year
+Simulation of the Amatrice sequence
 ===================
 
-This example demonstrates an ilustrative case to run the model sequentially.
+This example demonstrates an ilustrative case to run the Amatrice sequence, which should have a large computational effort.
+Similar to example 2, but has a larger number of simulations and lower cutoff magnitude.
 
 Overview:
     1. Define the model parameters in a python script
-    2. Creates multiple start dates
+    2. Creates the required start dates
     2. Run the model passing a random seed value (derived from the main seed)
     3. Read the synthetic catalogs and plot the daily average
 """
+import time
 
 ####################################################################################################################################
 # Load required modules
@@ -28,17 +30,18 @@ from matplotlib import pyplot
 ####################################################################################################################################
 # Define forecast parameters
 # ------------
-start_date = datetime(2010, 1, 1)
-ndays = 365
+start_date = datetime(2016, 9, 4)
+ndays = 100
 forecast_dates = [start_date + timedelta(i) for i in range(ndays)]
 dt = 1  # one-day forecasts
-mag_min = 4.0  # cut-off magnitude of the given forecasts
-nsims = 200
+mag_min = 3.0  # cut-off magnitude of the given forecasts
+nsims = 10
 seed = 23
 
 ####################################################################################################################################
 # Run simulations
 # ------------
+
 stime = time.perf_counter()
 for date in forecast_dates:
     run_model(date.isoformat(),
@@ -48,7 +51,6 @@ for date in forecast_dates:
               seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
               verbose=False)
 print(f'Time: {time.perf_counter() - stime:1f}')
-
 ####################################################################################################################################
 # Load forecasted synthetic catalogs, calculate the mean rate and plot them all together
 # ------------
@@ -70,6 +72,6 @@ for date in forecast_dates:
     day_cat = [i for i in day_cat if i[3] < (date + timedelta(dt))]
     cat_events.append(len(day_cat))
 
-pyplot.plot(range(ndays), cat_events, label='Observed events')
-pyplot.plot(range(ndays), forecast_avg, label='Mean simulated events')
+pyplot.semilogy(range(ndays), cat_events, label='Observed events')
+pyplot.semilogy(range(ndays), forecast_avg, label='Mean simulated events')
 pyplot.show()
