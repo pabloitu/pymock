@@ -1,5 +1,4 @@
 from datetime import datetime
-
 import numpy
 import os
 
@@ -50,27 +49,24 @@ def read_params(path):
     return params
 
 
-def make_forecast(catalog, params, n_sims=1, seed=None):
-    print(f"Making mockup forecast with model parameters:\n {params.__str__()}\n"
-          f"and simulation parameters:\n"
-          f" n_sims:{locals()['n_sims']}\n"
-          f" seed:{locals()['seed']}")
-
+def make_forecast(catalog, params, n_sims=1, seed=None, verbose=True):
     start_date = params['start_date']
     end_date = params['end_date']
+    dt = end_date - start_date
     mag_min = params.get('mag_min', 4.0)
 
     # set seed for pseudo-random number gen
     if seed:
         numpy.random.seed(seed)
     # filter catalog
-    catalog = [i for i in catalog if i[3] < end_date]
+    catalog = [i for i in catalog if i[3] < start_date]
 
     # Previous time window catalog
-    catalog_prev = [i for i in catalog if i[3] >= start_date]
+    catalog_prev = [i for i in catalog if i[3] >= (start_date - dt) and i[2] >= mag_min]
 
     # Previous window rate
-    lambda_total = len(catalog_prev)
+    lambd = len(catalog_prev)
+    # print('ltotal', lambda_total)
     # Background rate
     mu_total = len(catalog) * (end_date - start_date) / (
             max([i[3] for i in catalog]) - min([i[3] for i in catalog]))
@@ -79,10 +75,17 @@ def make_forecast(catalog, params, n_sims=1, seed=None):
     obsmag_min = min([i[2] for i in catalog])
     mu = mu_total * 10 ** (obsmag_min - mag_min)
 
-    obsmag_min = min([i[2] for i in catalog_prev])
-    lambd = lambda_total * 10 ** (obsmag_min - mag_min)
+    # print(obsmag_min)
+    # obsmag_min = min([i[2] for i in catalog_prev] if catalog_prev else [obsmag_min])
+    # print(obsmag_min)
+    # lambd = lambda_total * 10 ** (obsmag_min - mag_min)
 
-    print(f'\tmu: {mu:.2e}\n\tlambda:{lambd:.2e}')
+    if verbose:
+        print(f"Making mockup forecast with model parameters:\n {params.__str__()}\n"
+              f"and simulation parameters:\n"
+              f" n_sims:{locals()['n_sims']}\n"
+              f" seed:{locals()['seed']}")
+        print(f'\tmu: {mu:.2e}\n\tlambda:{lambd:.2e}')
     # The model creates a random selection of N events from the total input_catalog
     # A simulated catalog has N_events ~ Poisson(rate_prevday)
     forecast = []

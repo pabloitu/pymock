@@ -4,7 +4,8 @@ from mockup import model
 from datetime import datetime, timedelta
 
 
-def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=None):
+def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10,
+              seed=None, folder=None, verbose=True):
     """
     Main run function
     Wraps the main steps of creating a forecast for a given time window.
@@ -20,6 +21,7 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=No
         nsims (int): Number of synthetic catalogs
         seed (int): pseudo_random number seed
         folder (str): where to save forecasts. Defaults to current path
+        verbose (bool): print log
     """
 
     # Create forecasts folder in current directory if it does not exist.
@@ -44,7 +46,9 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10, seed=None, folder=No
                   'mag_min': float(mag_min)}
 
     # 3. Run model
-    forecast = model.make_forecast(catalog, params, n_sims=int(nsims), seed=int(seed) if seed else seed)
+    forecast = model.make_forecast(catalog, params, n_sims=int(nsims),
+                                   seed=int(seed) if seed else seed,  # pass int(seed) if seed is not None
+                                   verbose=verbose)
 
     # 4. Write forecasts
     model.write_forecast(params['start_date'], forecast, folder)
