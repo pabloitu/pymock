@@ -4,8 +4,10 @@ Mockup or *dummy* time-dependent model. The repository structure, setup, tests a
 the models competing in the Earthquake Forecasting
 Experiment for Italy.
 
-The model's formulation is the simplest possible, which still captures the code complexity arisen from time-dependency.
-It follows a non-homogeneous Poisson process, where the mean rate of events larger than a threhold magnitude
+The model's formulation is the simplest possible, which still captures the code complexity arisen from time-dependency. 
+Basically, the model returns a Poisson forecast, with mean rate equal to the sum of a background rate, plus the rate from the previous time step (e.g. previous day).
+
+Formally, the model follows a non-homogeneous Poisson process, where the mean rate of events larger than a threhold magnitude
 $`m_0`$ is:
 
 ```math
