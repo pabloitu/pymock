@@ -1,11 +1,19 @@
 # mockup
 
-Mock-up *dummy* model. It serves as template for models competing in the Earthquake Forecasting Experiment
-for Italy
+Mockup or *dummy* model, as the repository-structure template for the models competing in the Earthquake Forecasting Experiment for Italy.
 
-## Install in virtual environment
+The model's formulation is the simplest possible, but still capturing the code complexity arisen due to time-dependency. The model follows a non-homogeneous Poisson process, where the mean rate is:
+```math
+\mu(t, \boldsymbol{x}) = \hat{\mu}(\boldsymbol{x}) + \cfrac{\int_{t-h}^{t}\lambda(\tau, \boldsymbol{x})\,\mathrm{d}\tau}{h}
+```
+where $`\hat{\mu}`$ is the background rate obtained from the entire input catalog, and the second term of the right side is simply the average of the rate $\lambda$ in a time window $`h`$ of choice (e.g. 1 day).
 
-Simply install and run in a python venv
+
+
+## Installation
+### In a python virtual environment
+
+Install and run using a python venv. In the repository main folder, run:
 
 ```
 python -m venv venv
@@ -14,11 +22,12 @@ pip install -e .
 python run.py
 ```
 
-Using Docker is preferred, as described in the following section
+To deactivate/reactivate the environment, type `source deactivate`, or `source venv/bin/activate` respectively. (See `setup.py` and the setup arguments found therein)
+Once the code is working in a `python` virtual environment, we suggest the use of Docker, as described in the following section:
 
-## Docker build
+### Docker build
 
-Builds the docker container setting permissions for current user (see `Dockerfile`)
+Build the docker container:
 
 ```
 docker build \
@@ -28,10 +37,17 @@ docker build \
 --no-cache \
 -t mockup .
 ```
+This grants Docker Container's read/write permissions to the current local user, along with the instructions in `Dockerfile`
 
-## Model run
+## Model structure
 
-### Run using python in Docker, and a parameters.txt file
+
+
+## Running the model
+
+There are several ways to run the model, for which here a couple are shown. The final choice is left to the modeler criteria. We suggest running the model as a binary with arguments passed from the terminal.
+
+### Run in Docker, using a parameters.txt file
 
 Runs python from the docker image, the model interface (`run.py`), which reads the file `parameters.txt`
 (see `run.run_model()`, lines 34-38)
