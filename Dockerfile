@@ -2,16 +2,17 @@
 FROM python:3.8.13
 
 ## Setup user args
-ARG USERNAME=mockup
-ARG USER_UID=1100
-ARG USER_GID=$USER_UID
+ARG USERNAME=mockup         # default. ignored if USERNAME is pased when calling `docker build`
+ARG USER_UID=1100           # default
+ARG USER_GID=$USER_UID      # default
+
 RUN groupadd --non-unique -g $USER_GID $USERNAME \
     && useradd -u $USER_UID -g $USER_GID -s /bin/sh -m $USERNAME
 
-## Set up work directory in the Docker container
-WORKDIR /usr/src/mockup/
+## Set up work directory in the Docker container. Change {mockup} to {model_name} if this file is used as template
+WORKDIR /usr/src/mockup/        
 
-## Copy the files from the local machine (the repository) to the Docker container
+## Copy the files from the local machine (the repository) to the Docker container. Change {mockup} to {model_name} if this file is used as template
 COPY --chown=$USER_UID:$USER_GID . /usr/src/mockup/
 
 
