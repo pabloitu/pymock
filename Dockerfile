@@ -2,7 +2,7 @@
 FROM python:3.8.13
 
 ## Setup user args
-ARG USERNAME=mockup         # default. ignored if USERNAME is pased when calling `docker build`
+ARG USERNAME=mockup         # default. ignored if USERNAME is pased when calling docker build
 ARG USER_UID=1100           # default
 ARG USER_GID=$USER_UID      # default
 
@@ -27,4 +27,4 @@ RUN pip install -e .
 
 ## Docker now will be initialized as user
 USER $USERNAME
-
+ENTRYPOINT ["run"]

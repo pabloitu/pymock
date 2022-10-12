@@ -13,7 +13,6 @@ Overview:
     2. Run the model passing a random seed value (derived from the main seed)
     3. Read the synthetic catalogs and plot the daily average
 """
-import time
 
 ####################################################################################################################################
 # Load required modules
