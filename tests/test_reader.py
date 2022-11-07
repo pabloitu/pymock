@@ -1,6 +1,6 @@
 import numpy
 import os
-from mockup import model
+from pymock import model
 from datetime import datetime
 
 # Get test file path

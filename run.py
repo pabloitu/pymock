@@ -1,6 +1,7 @@
 import os
 import sys
-from mockup import model
+from pymock import model
+from pymock import libs
 from datetime import datetime, timedelta
 
 
@@ -30,12 +31,12 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10,
     # 1. Reads input catalog. Defaults to a catalog with path in ${currentpath}/input/iside
     #  * Can be added as extra argument
     cat_path = os.path.join('input', 'iside')
-    catalog = model.load_cat(path=cat_path)
+    catalog = libs.load_cat(path=cat_path)
 
     # 2. Set up input and model parameters.
     if not start_date:
         # If no start_date is passed, model tries to read from a parameters.txt file found in the directory
-        params = model.read_params('parameters.txt')  # A dict containing start_date, end_date and mag_min
+        params = libs.read_params('parameters.txt')  # A dict containing start_date, end_date and mag_min
         nsims = params.get('nsims', nsims)  # Check if nsims and seed are in parameters.txt. If not, uses defaults
         seed = params.get('seed', seed)
     else:
@@ -51,7 +52,7 @@ def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10,
                                    verbose=verbose)
 
     # 4. Write forecasts
-    model.write_forecast(params['start_date'], forecast, folder)
+    libs.write_forecast(params['start_date'], forecast, folder)
 
 
 def run():

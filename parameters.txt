@@ -1,8 +1,10 @@
-### Input parameters for model $modelfoo_{name_modelers}$ ###
+### pymock input parameters ###
 
-
-## Input parameters provided by Test Center ##
+## Experiment obligatory parameters. They should have a default value##
 # Testing time window 1 day #
-forecastStartDate = 2018/07/01 00:00:00
-forecastEndDate = 2018/07/01 23:59:59
-## End input parameters ##
+start_date = 2018/07/01 00:00:00
+end_date = 2018/07/01 23:59:59
+mag_min = 4.0
+seed = 23
+nsims = 100
+

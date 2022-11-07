@@ -22,7 +22,7 @@ import os
 import time
 from datetime import datetime, timedelta
 from run import run_model
-from mockup.model import load_cat, syncat_path
+from pymock.model import load_cat, syncat_path
 from matplotlib import pyplot
 
 ####################################################################################################################################

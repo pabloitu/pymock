@@ -1,6 +1,6 @@
-# mockup
+# pymock
 
-Mockup or *dummy* time-dependent model. The repository structure, setup, tests and examples can be used as template for
+Mock or *dummy* time-dependent model. The repository structure, setup, tests and examples can be used as template for
 the models competing in the Earthquake Forecasting
 Experiment for Italy.
 
@@ -14,7 +14,7 @@ $`m_0`$ is:
 \mu(\boldsymbol{x},t, m>m_0) = \hat{\mu}(\boldsymbol{x},m>m_0) + \frac{\displaystyle\int_{t-h}^{t}\lambda(\boldsymbol{x}, \tau, m>m_0)\,\mathrm{d}\tau}{h}
 ```
 
-where $`\hat{\mu}(\boldsymbol{x}, m>m_0)`$ is the cell's background rate derived from the complete training catalog. The
+where $`\hat{\mu}(\boldsymbol{x}, m>m_0)`$ is the total background rate (homogeneous in space) derived from the complete training catalog. The
 second term of the right side is the average of the rate $`\lambda`$ obtained from the previous time window of length
 $`h`$ (e.g.
 1-day).
@@ -51,7 +51,7 @@ docker build \
 --build-arg USER_UID=$(id -u) \
 --build-arg USER_GID=$(id -g) \
 --no-cache \
--t mockup .
+-t pymock .
 ```
 
 This grants Docker Container's read/write permissions to the current local user, along with the instructions
@@ -70,7 +70,7 @@ Runs python from the docker image, the model interface (`run.py`), which reads t
 (see `run.run_model()`, lines 34-38)
 
 ```
-docker run --rm --volume $PWD:/usr/src/mockup:rw mockup python run.py
+docker run --rm --volume $PWD:/usr/src/pymock:rw pymock python run.py
 ```
 
 
@@ -79,7 +79,7 @@ docker run --rm --volume $PWD:/usr/src/mockup:rw mockup python run.py
 Runs the model using the binary created from `setup.py` (see lines 12-16 therein).
 
 ```
-docker run --rm --volume $PWD:/usr/src/mockup:rw mockup run
+docker run --rm --volume $PWD:/usr/src/pymock:rw pymock run
 ```
 
 
@@ -90,7 +90,7 @@ Runs the binary using arguments passed from the terminal (preferred way). See fu
 ```
 # Code usage
 # docker run --rm --volume ${local_entrypoint}:${image_entrypoint}:${permits} ${image_name} run ${datetime} ${delta_time} ${min_mag}
-docker run --rm --volume $PWD:/usr/src/mockup:rw mockup run 2010-01-01 1 4.0
+docker run --rm --volume $PWD:/usr/src/pymock:rw pymock run 2010-01-01 1 4.0
 ```
 
 
