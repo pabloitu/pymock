@@ -33,7 +33,7 @@ ndays = 365
 forecast_dates = [start_date + timedelta(i) for i in range(ndays)]
 dt = 1  # one-day forecasts
 mag_min = 4.0  # cut-off magnitude of the given forecasts
-nsims = 200
+nsims = 20000
 seed = 23
 
 ####################################################################################################################################
