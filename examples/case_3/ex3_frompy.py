@@ -30,9 +30,9 @@ from matplotlib import pyplot
 ####################################################################################################################################
 # Define forecast parameters
 # ------------
-start_date = datetime(2016, 9, 4)
+start_date = datetime(2009, 3, 1)
 ndays = 100
-forecast_dates = [start_date + timedelta(i) for i in range(ndays)]
+forecast_dates = numpy.array([start_date + timedelta(i) for i in range(ndays)])
 dt = 1  # one-day forecasts
 mag_min = 3.0  # cut-off magnitude of the given forecasts
 nsims = 10
@@ -42,15 +42,15 @@ seed = 23
 # Run simulations
 # ------------
 
-stime = time.perf_counter()
-for date in forecast_dates:
-    run_model(date.isoformat(),
-              dt=dt,
-              mag_min=mag_min,
-              nsims=nsims,
-              seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
-              verbose=False)
-print(f'Time: {time.perf_counter() - stime:1f}')
+# stime = time.perf_counter()
+# for date in forecast_dates:
+#     run_model(date.isoformat(),
+#               dt=dt,
+#               mag_min=mag_min,
+#               nsims=nsims,
+#               seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
+#               verbose=False)
+# print(f'Time: {time.perf_counter() - stime:1f}')
 ####################################################################################################################################
 # Load forecasted synthetic catalogs, calculate the mean rate and plot them all together
 # ------------
@@ -72,6 +72,15 @@ for date in forecast_dates:
     day_cat = [i for i in day_cat if i[3] < (date + timedelta(dt))]
     cat_events.append(len(day_cat))
 
-pyplot.semilogy(range(ndays), cat_events, label='Observed events')
-pyplot.semilogy(range(ndays), forecast_avg, label='Mean simulated events')
+
+fig = pyplot.figure(figsize=(8,4))
+pyplot.title("pyMock - L'Aquila sequence")
+pyplot.plot(forecast_dates, cat_events, label='Observed events')
+pyplot.plot(forecast_dates, forecast_avg, label='Mean simulated events')
+pyplot.legend()
+pyplot.xlabel('Date')
+pyplot.ylabel('Daily rate')
+pyplot.grid()
+pyplot.tight_layout()
+pyplot.savefig('forecasts/ex3_0-4')
 pyplot.show()

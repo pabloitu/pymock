@@ -30,24 +30,24 @@ from matplotlib import pyplot
 # ------------
 start_date = datetime(2010, 1, 1)
 ndays = 365
-forecast_dates = [start_date + timedelta(i) for i in range(ndays)]
+forecast_dates = numpy.array([start_date + timedelta(i) for i in range(ndays)])
 dt = 1  # one-day forecasts
 mag_min = 4.0  # cut-off magnitude of the given forecasts
-nsims = 20000
+nsims = 1000
 seed = 23
 
 ####################################################################################################################################
 # Run simulations
 # ------------
-stime = time.perf_counter()
-for date in forecast_dates:
-    run_model(date.isoformat(),
-              dt=dt,
-              mag_min=mag_min,
-              nsims=nsims,
-              seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
-              verbose=False)
-print(f'Time: {time.perf_counter() - stime:1f}')
+# stime = time.perf_counter()
+# for date in forecast_dates:
+#     run_model(date.isoformat(),
+#               dt=dt,
+#               mag_min=mag_min,
+#               nsims=nsims,
+#               seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
+#               verbose=False)
+# print(f'Time: {time.perf_counter() - stime:1f}')
 
 ####################################################################################################################################
 # Load forecasted synthetic catalogs, calculate the mean rate and plot them all together
@@ -55,7 +55,6 @@ print(f'Time: {time.perf_counter() - stime:1f}')
 
 cat = load_cat(os.path.join('input', 'iside'))
 cat = [i for i in cat if i[2] >= mag_min]
-
 cat_events = []
 forecast_avg = []
 
@@ -69,7 +68,16 @@ for date in forecast_dates:
     day_cat = [i for i in cat if i[3] >= date]
     day_cat = [i for i in day_cat if i[3] < (date + timedelta(dt))]
     cat_events.append(len(day_cat))
+cat_events = numpy.array(cat_events)
 
-pyplot.plot(range(ndays), cat_events, label='Observed events')
-pyplot.plot(range(ndays), forecast_avg, label='Mean simulated events')
+pyplot.title('pyMock - Mean rate')
+pyplot.plot(forecast_dates, cat_events, label='Observed events')
+pyplot.plot(forecast_dates, forecast_avg, '--', label='Mean simulated events')
+pyplot.plot(forecast_dates[cat_events > 0], cat_events[cat_events > 0], 'o',
+            color='steelblue')
+pyplot.legend()
+pyplot.xlabel('Date')
+pyplot.ylabel('Daily rate')
+pyplot.tight_layout()
+pyplot.savefig('forecasts/ex2_0-4')
 pyplot.show()
