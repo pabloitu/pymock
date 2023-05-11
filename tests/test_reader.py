@@ -1,24 +1,22 @@
 import numpy
 import os
-from pymock import main
+from pymock import libs
 from datetime import datetime
 
 # Get test file path
-current_dir = os.path.abspath(__file__)
-
+current_dir = os.path.dirname(__file__)
 # Here we get the path from the catalog that the modeler provides as artifact
 catalog_path = os.path.join(current_dir, 'artifacts', 'iside_tests')
 
 
 def test_catread():
     # Reads the artifact catalog
-    catalog = model.load_cat(catalog_path)
+    catalog = libs.load_cat(catalog_path)
 
     # Test number of events in catalog
     assert len(catalog) == 35499
-
     # Test max mag (uses numpy to test floating points)
-    assert numpy.isclose(numpy.max(catalog[:, 2]), 6.2)
+    assert numpy.isclose(numpy.max([i[2] for i in catalog]), 6.2)
 
     # Test an individual event
     # lat, lon, mag, datetime, depth, cat_id, event_id
