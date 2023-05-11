@@ -21,8 +21,8 @@ import numpy
 import os
 import time
 from datetime import datetime, timedelta
-from run import run_model
-from pymock.model import load_cat, syncat_path
+from run import main
+from pymock.main import load_cat, syncat_path
 from matplotlib import pyplot
 
 ####################################################################################################################################
@@ -53,7 +53,7 @@ seed = 23
 # Load forecasted synthetic catalogs, calculate the mean rate and plot them all together
 # ------------
 
-cat = load_cat(os.path.join('input', 'iside'))
+cat = load_cat(os.path.join('input', 'catalog.csv'))
 cat = [i for i in cat if i[2] >= mag_min]
 cat_events = []
 forecast_avg = []

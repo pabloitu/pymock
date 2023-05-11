@@ -1,5 +1,5 @@
 import os
-from pymock import model
+from pymock import main
 from datetime import datetime
 
 # Get test file path
@@ -20,7 +20,8 @@ def test_catwrite():
     model.write_forecast(date_forecast, forecast, folder=write_path)
 
     ## File exist
-    forecast_name = os.path.join(write_path, f'pymock_{date_forecast.date().isoformat()}.txt')
+    forecast_name = os.path.join(write_path,
+                                 f'pymock_{date_forecast.date().isoformat()}.txt')
     assert os.path.isfile(forecast_name)
 
     # Read raw data from written forecast

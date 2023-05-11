@@ -1,72 +1,39 @@
-import os
 import sys
-from pymock import model
-from pymock import libs
-from datetime import datetime, timedelta
+from pymock import main
+
+"""
+Run 'wrapper' function.
+ 
+It receives the input arguments file path (e.g. input/args.txt) from the 
+command terminal and passes it to the main() function in pymock/main.py.
+
+1. This file can be run from the command terminal as:
+   >>> $ python run.py <args_path>
+   with default to <args_path> = input/args.txt
+
+2. It can also be run from a python console if needed.
+
+3. (Advanced) An entry_point was defined, so pymock can also be run as:
+   >>> $ pymock <args_path>
+   * see setup.cfg and pymock.main:run() for details.
+   
+"""
 
 
-def run_model(start_date=None, dt=1, mag_min=4.0, nsims=10,
-              seed=None, folder=None, verbose=True):
-    """
-    Main run function
-    Wraps the main steps of creating a forecast for a given time window.
-    1.- Reads a catalog
-    2.- Gets the parameters (e.g. forecast dates)
-    3.- Creates the forecast as synthetic catalogs
-    4.- Writes the synthetic catalogs
-
-    params:
-        start_date (str): Start of the forecast. If None, tries to read from parameters.txt
-        dt (float/str):  time interval of the forecast, in days
-        mag_min (float): Forecast minimum magnitude
-        nsims (int): Number of synthetic catalogs
-        seed (int): pseudo_random number seed
-        folder (str): where to save forecasts. Defaults to current path
-        verbose (bool): print log
-    """
-
-    # Create forecasts folder in current directory if it does not exist.
-    os.makedirs(folder or 'forecasts', exist_ok=True)
-
-    # 1. Reads input catalog. Defaults to a catalog with path in ${currentpath}/input/iside
-    #  * Can be added as extra argument
-    cat_path = os.path.join('input', 'iside')
-    catalog = libs.load_cat(path=cat_path)
-
-    # 2. Set up input and model parameters.
-    if not start_date:
-        # If no start_date is passed, model tries to read from a parameters.txt file found in the directory
-        params = libs.read_params('parameters.txt')  # A dict containing start_date, end_date and mag_min
-        nsims = params.get('nsims', nsims)  # Check if nsims and seed are in parameters.txt. If not, uses defaults
-        seed = params.get('seed', seed)
-    else:
-        start_date = datetime.fromisoformat(start_date)
-        # Creates a params dictionary using the parameters passed
-        params = {'start_date': start_date,
-                  'end_date': start_date + timedelta(float(dt)),
-                  'mag_min': float(mag_min)}
-
-    # 3. Run model
-    forecast = model.make_forecast(catalog, params, n_sims=int(nsims),
-                                   seed=int(seed) if seed else seed,  # pass int(seed) if seed is not None
-                                   verbose=verbose)
-
-    # 4. Write forecasts
-    libs.write_forecast(params['start_date'], forecast, folder)
-
-
-def run():
-    # Reads arguments passed to this python file run.py.
+def run(default_args='input/args.txt'):
+    # Reads the arguments passed from the terminal
     args = sys.argv
-    if len(args) == 1:
-        # This file was run as `python run.py`
-        print('Running using parameter file')
-    elif len(args) > 1:
-        # This file was run as `python run.py ${datetime}`
-        print('Running using input datetime')
 
-    # Run the model, passing the unpacked arguments, if any.
-    run_model(*args[1:])
+    if len(args) > 1:  # an args file was passed
+        print(f'Running using input argments {args[1]}')
+        main.main(*args[1:])
+
+    elif len(args) == 1:  # no args file passed, trying default
+        try:
+            print(f'Running using default arguments: {default_args}')
+            main.main(argpath=default_args)
+        except FileNotFoundError:
+            raise FileNotFoundError('Please provide arguments filepath')
 
 
 if __name__ == '__main__':
