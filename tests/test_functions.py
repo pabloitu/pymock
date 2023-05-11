@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from mockup import model
+from pymock import model
 
 param_file = os.path.join(os.path.dirname(__file__), 'artifacts', 'parameters_test.txt')
 cat_file = os.path.join(os.path.dirname(__file__), 'artifacts', 'iside_tests')

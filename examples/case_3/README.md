@@ -22,7 +22,7 @@ Details are found in the script's comments
 # From terminal, passing arguments
 
 The script `${pathrepo}/run.py` is the main interface for the model. It has the basic instructions to perform the steps
-necessary to create the forecast synthetic catalogs. It could also be placed into the `mockup` folder.
+necessary to create the forecast synthetic catalogs. It could also be placed into the `pymock` folder.
 The script can be run from the terminal, by passing the arguments in sequential order,
 as stated in the function `run.run_model()`. How arguments are read can be seen in function `run.run()`,
 where args are read sequentally from the passed arguments through the terminal (line 55).
