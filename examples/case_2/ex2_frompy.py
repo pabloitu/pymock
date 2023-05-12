@@ -18,66 +18,75 @@ Overview:
 # -----------------------
 
 import numpy
-import os
 import time
 from datetime import datetime, timedelta
-from run import main
-from pymock.main import load_cat, syncat_path
+from pymock.main import make_forecast
+from pymock.libs import load_cat
 from matplotlib import pyplot
-
 ####################################################################################################################################
 # Define forecast parameters
 # ------------
+catalog = load_cat('input/iside')
 start_date = datetime(2010, 1, 1)
-ndays = 365
-forecast_dates = numpy.array([start_date + timedelta(i) for i in range(ndays)])
-dt = 1  # one-day forecasts
-mag_min = 4.0  # cut-off magnitude of the given forecasts
-nsims = 1000
+
+ndays = 1000
+forecast_windows = [(start_date + timedelta(i),
+                     start_date + timedelta(i + 1)) for i in range(ndays)]
+
+
+n_sims = 50
 seed = 23
 
-####################################################################################################################################
+###############################################################################
 # Run simulations
 # ------------
-# stime = time.perf_counter()
-# for date in forecast_dates:
-#     run_model(date.isoformat(),
-#               dt=dt,
-#               mag_min=mag_min,
-#               nsims=nsims,
-#               seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
-#               verbose=False)
-# print(f'Time: {time.perf_counter() - stime:1f}')
+stime = time.perf_counter()
+daily_forecasts = []
+for start, end in forecast_windows:
+    args = {
+            'start_date': start,     # To be updated for every window
+            'end_date': end,
+            'mag_min': 4.0,
+                }
+    day = make_forecast(catalog=catalog,
+                        args=args,
+                        n_sims=n_sims,
+                        # a different seed for each day,
+                        # derived from the main seed (23).
+                        # seed=numpy.random.randint(1, 100),
+                        verbose=False)
 
-####################################################################################################################################
-# Load forecasted synthetic catalogs, calculate the mean rate and plot them all together
-# ------------
-
-cat = load_cat(os.path.join('input', 'catalog.csv'))
-cat = [i for i in cat if i[2] >= mag_min]
-cat_events = []
-forecast_avg = []
-
-for date in forecast_dates:
-    syncat = load_cat(syncat_path(date, 'forecasts'))
-    cat_ids = [i[5] for i in syncat]
-    events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
-    avg_events = numpy.sum(events_per_cat) / nsims
-    forecast_avg.append(avg_events)
-
-    day_cat = [i for i in cat if i[3] >= date]
-    day_cat = [i for i in day_cat if i[3] < (date + timedelta(dt))]
-    cat_events.append(len(day_cat))
-cat_events = numpy.array(cat_events)
-
-pyplot.title('pyMock - Mean rate')
-pyplot.plot(forecast_dates, cat_events, label='Observed events')
-pyplot.plot(forecast_dates, forecast_avg, '--', label='Mean simulated events')
-pyplot.plot(forecast_dates[cat_events > 0], cat_events[cat_events > 0], 'o',
-            color='steelblue')
-pyplot.legend()
-pyplot.xlabel('Date')
-pyplot.ylabel('Daily rate')
-pyplot.tight_layout()
-pyplot.savefig('forecasts/ex2_0-4')
-pyplot.show()
+    daily_forecasts.append(day)
+print(f'Time: {time.perf_counter() - stime:1f}')
+#
+# #############################################################################
+# # Calculate the mean rate from synthetic catalogs and plot them all together
+# # --------------------------------------------------------------------------
+# # catalog = [i for i in catalog if i[2] >= args['mag_min']]
+# # cat_events = []
+# # forecast_avg = []
+# #
+# # for window, forecast in zip(forecast_windows, daily_forecasts):
+# #
+# #     cat_ids = [i[5] for i in forecast]
+# #     events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
+# #     avg_events = numpy.sum(events_per_cat) / n_sims
+# #     forecast_avg.append(avg_events)
+# #
+# #     day_cat = [i for i in catalog if window[0] <= i[3] < window[1]]
+# #     cat_events.append(len(day_cat))
+# #
+# # cat_events = numpy.array(cat_events)
+# #
+# # issued_dates = numpy.array([i[0] for i in forecast_windows])
+# # pyplot.title('pyMock - Mean rate')
+# # pyplot.plot(issued_dates, cat_events, label='Observed events')
+# # pyplot.plot(issued_dates, forecast_avg, '--', label='Mean simulated events')
+# # pyplot.plot(issued_dates[cat_events > 0], cat_events[cat_events > 0], 'o',
+# #             color='steelblue')
+# # pyplot.legend()
+# # pyplot.xlabel('Date')
+# # pyplot.ylabel('Daily rate')
+# # pyplot.tight_layout()
+# # pyplot.savefig('forecasts/ex2_0-4')
+# # pyplot.show()

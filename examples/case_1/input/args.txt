@@ -1,0 +1,7 @@
+start_date = 2011-01-01T00:00:00
+end_date = 2011-01-02T00:00:00
+catalog = iside
+mag_min = 4.0
+n_sims = 1000
+seed = 23
+

@@ -3,6 +3,9 @@ import os
 
 
 def syncat_path(start, end, folder):
+    """
+    Returns the file path of a forecast based on its start and end dates.
+    """
     midnight = time(0, 0, 0)
     if start.time() == midnight and end.time() == midnight:
         start = start.date()
@@ -14,6 +17,16 @@ def syncat_path(start, end, folder):
 
 
 def load_cat(path):
+    """
+    Loads a catalog forecast using the CSEP format
+
+    Args:
+        path (str): Path to the catalog file
+
+    Returns:
+        A list of CSEP formatted events in
+            lon, lat, mag, time_str, depth, catalog_id, event_id
+    """
     catalog = []
     with open(path) as f_:
         for line in f_.readlines()[1:]:
@@ -27,8 +40,15 @@ def load_cat(path):
 
 
 def write_forecast(start, end, forecast, folder=None):
+    """
+    Writes a catalog forecast using the CSEP format  in
+        lon, lat, mag, time_str, depth, catalog_id, event_id
+    """
+
     if folder is None:
         folder = 'forecasts'
+    os.makedirs(folder, exist_ok=True)
+    print(syncat_path(start, end, folder))
     with open(syncat_path(start, end, folder), 'w') as file_:
         file_.write('lon, lat, M, time_string, depth, catalog_id, event_id\n')
         for event in forecast:
@@ -38,6 +58,10 @@ def write_forecast(start, end, forecast, folder=None):
 
 
 def read_args(path):
+    """
+    Parses an arguments file. This file should be build as:
+    {argument} = {argument_value}
+    """
     params = {'start_date': None, 'end_date': None}
     with open(path) as f_:
         for line in f_.readlines():
@@ -51,8 +75,8 @@ def read_args(path):
                                                  line_[1])
             elif line_[0] == 'mag_min':
                 params['mag_min'] = float(line_[1])
-            elif line_[0] == 'nsims':
-                params['nsims'] = int(line_[1])
+            elif line_[0] == 'n_sims':
+                params['n_sims'] = int(line_[1])
             elif line_[0] == 'seed':
                 params['seed'] = int(line_[1])
 

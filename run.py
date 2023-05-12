@@ -21,17 +21,17 @@ command terminal and passes it to the main() function in pymock/main.py.
 
 
 def run(default_args='input/args.txt'):
-    # Reads the arguments passed from the terminal
-    args = sys.argv
 
-    if len(args) > 1:  # an args file was passed
-        print(f'Running using input argments {args[1]}')
+    args = sys.argv  # This reads the arguments given from the terminal
+
+    if len(args) > 1:  # arguments where passed
+        print(f'Running using input arguments {args[1]}')
         main.main(*args[1:])
 
     elif len(args) == 1:  # no args file passed, trying default
         try:
             print(f'Running using default arguments: {default_args}')
-            main.main(argpath=default_args)
+            main.main(arg_path=default_args)
         except FileNotFoundError:
             raise FileNotFoundError('Please provide arguments filepath')
 

@@ -20,9 +20,8 @@ Overview:
 
 import numpy
 import os
-import time
 from datetime import datetime, timedelta
-from run import main
+
 from pymock.main import load_cat, syncat_path
 from matplotlib import pyplot
 
@@ -34,7 +33,7 @@ ndays = 100
 forecast_dates = numpy.array([start_date + timedelta(i) for i in range(ndays)])
 dt = 1  # one-day forecasts
 mag_min = 3.0  # cut-off magnitude of the given forecasts
-nsims = 10
+n_sims = 10
 seed = 23
 
 ####################################################################################################################################
@@ -46,7 +45,7 @@ seed = 23
 #     run_model(date.isoformat(),
 #               dt=dt,
 #               mag_min=mag_min,
-#               nsims=nsims,
+#               n_sims=n_sims,
 #               seed=numpy.random.randint(1, 100),  # a different seed for each day, derived from the main seed (23).
 #               verbose=False)
 # print(f'Time: {time.perf_counter() - stime:1f}')
@@ -64,7 +63,7 @@ for date in forecast_dates:
     syncat = load_cat(syncat_path(date, 'forecasts'))
     cat_ids = [i[5] for i in syncat]
     events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
-    avg_events = numpy.sum(events_per_cat) / nsims
+    avg_events = numpy.sum(events_per_cat) / n_sims
     forecast_avg.append(avg_events)
 
     day_cat = [i for i in cat if i[3] >= date]

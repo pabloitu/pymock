@@ -12,45 +12,54 @@ Overview:
     3. Read the synthetic catalogs and plot them
 """
 import matplotlib.pyplot as plt
-####################################################################################################################################
+###############################################################################
 # Load required modules
 # -----------------------
 
 import numpy
 from datetime import datetime
-from run import main
-from pymock.main import load_cat, syncat_path
+from pymock.main import make_forecast
+from pymock.libs import load_cat, syncat_path, write_forecast
 from matplotlib import pyplot
 
-####################################################################################################################################
+###############################################################################
 # Define forecast parameters
 # ------------
 
-forecast_date = datetime(2011, 1,
-                         1)  # daily rate ~1/5 of input catalog mean rate
-dt = 1  # one-day forecast
-mag_min = 4.0  # cut-off magnitude of the given forecasts
-nsims = 1000
-seed = 2
+catalog = load_cat('input/iside')
+args = {
+     'start_date': datetime(2011, 1, 1),
+     'end_date': datetime(2011, 1, 2),
+     'mag_min': 4.0,
+}
 
-####################################################################################################################################
+###############################################################################
 # Run simulations
-# ------------
-main(forecast_date.isoformat(),
-     dt=dt,
-     mag_min=mag_min,
-     nsims=nsims,
-     seed=seed)
+# ---------------
+forecast = make_forecast(catalog,
+                         args,
+                         n_sims=1000,
+                         seed=2)
 
-####################################################################################################################################
-# Load forecasted synthetic catalogs and plot them all together
-# ------------
+###############################################################################
+# Store forecast
+# --------------
+write_forecast(start=args['start_date'],
+               end=args['end_date'],
+               forecast=forecast,
+               folder='forecasts'
+               )
 
-syncat = load_cat(syncat_path(forecast_date, 'forecasts'))
-lon = [i[0] for i in syncat]
-lat = [i[1] for i in syncat]
-mag = [i[2] for i in syncat]
-n_syncat = [i[5] for i in syncat]
+###############################################################################
+# Plot all forecast together with their ids in different color
+# and magnitudes in different size.
+# ------------------------------------------------------------
+
+
+lon = [i[0] for i in forecast]
+lat = [i[1] for i in forecast]
+mag = [i[2] for i in forecast]
+n_syncat = [i[5] for i in forecast]
 
 region = numpy.genfromtxt('input/region')
 

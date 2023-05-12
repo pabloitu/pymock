@@ -32,7 +32,7 @@ the forecast), but it is not necessary for the general case.
 ```
 cd examples/case_1
 
-# python ${pathrepo}/run.py datetime delta_time mag_min nsims seed
+# python ${pathrepo}/run.py datetime delta_time mag_min n_sims seed
 python ../../run.py 2010-01-01T00:00:00 1 4.0 10000 23
 ```
 
