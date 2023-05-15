@@ -17,11 +17,11 @@ current_date="$start_forecast"
 RANDOM=640
 while [[ "$current_date" != "$end_forecast" ]]; do
 
-    # Replace the variables with the current date
+    # Replace the variables with the current date and seed
     end_date=$(date -d "$current_date + 1 day" +"%Y-%m-%d")
     replace_variables "$current_date" "$end_date" "$RANDOM" "input/args.txt"
 
-    # Perform your desired operations here
+    # Run the model as desired (python+run.py or binary)
     python ../../run.py input/args.txt
 #    pymock input/args.txt
 

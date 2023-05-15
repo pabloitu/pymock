@@ -4,13 +4,13 @@
 Simple simulation of daily forecast for one year
 ===================
 
-This example demonstrates an ilustrative case to run the model sequentially.
+This example demonstrates an illustrative case to run the model sequentially.
 
 Overview:
-    1. Define the model parameters in a python script
+    1. Define the model arguments in a python script
     2. Creates multiple start dates
     2. Run the model passing a random seed value (derived from the main seed)
-    3. Read the synthetic catalogs and plot the daily average
+    3. Get the mean rate from synthetic catalogs and plot against events
 """
 
 ###############################################################################

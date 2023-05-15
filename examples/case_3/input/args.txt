@@ -1,0 +1,8 @@
+# Example 2 argument
+
+start_date = 2009-06-08
+end_date = 2009-06-09
+catalog = iside
+mag_min = 3.5
+n_sims = 1000
+seed = 32009
