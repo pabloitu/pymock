@@ -32,7 +32,7 @@ def load_cat(path):
         for line in f_.readlines()[1:]:
             line = line.split(',')
             event = [float(line[0]), float(line[1]), float(line[2]),
-                     datetime.strptime(line[3], '%Y-%m-%dT%H:%M:%S.%f'),
+                     datetime.fromisoformat(line[3]),
                      float(line[4]), int(line[5]), int(line[6])]
             catalog.append(event)
 
