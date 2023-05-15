@@ -48,7 +48,6 @@ def write_forecast(start, end, forecast, folder=None):
     if folder is None:
         folder = 'forecasts'
     os.makedirs(folder, exist_ok=True)
-    print(syncat_path(start, end, folder))
     with open(syncat_path(start, end, folder), 'w') as file_:
         file_.write('lon, lat, M, time_string, depth, catalog_id, event_id\n')
         for event in forecast:

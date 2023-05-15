@@ -2,9 +2,10 @@ import os
 import sys
 import numpy
 from pymock import libs
+from copy import deepcopy
 
 
-def main(arg_path=None, folder=None, verbose=True):
+def main(arg_path=None, folder=None, verbose=False):
     """
     Main pymock's function
     Contains the main steps of creating a forecast for a given time window.
@@ -45,12 +46,12 @@ def main(arg_path=None, folder=None, verbose=True):
     libs.write_forecast(args['start_date'], args['end_date'], forecast, folder)
 
 
-def make_forecast(catalog, args, n_sims=1000, seed=None, verbose=True):
+def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     """
     Routine to create a forecast from an input catalog and argument dictionary
 
     Args:
-        catalog (list): A CSEP formatted events list (see libs.load_cat)
+        input_catalog (list): A CSEP formatted events list (see libs.load_cat)
         args (dict): Contains the arguments and its values
         n_sims (int): Number of stochastic catalogs to create
         seed (int): seed for random number generation
@@ -65,19 +66,13 @@ def make_forecast(catalog, args, n_sims=1000, seed=None, verbose=True):
     if seed:
         numpy.random.seed(seed)
     # filter catalog
-    cat_total = [i for i in catalog if i[3] < start_date]
-    # Previous time window catalog
-    catalog_prev = []
-    for i in cat_total:
-        if i[3] >= (start_date - dt):
-            if mag_min <= i[2]:
-                catalog_prev.append(i)
-    # catalog_prev = [i for i in catalog if
-    #                 ((start_date - dt) <= i[3]) and i[2] >= mag_min]
+
+    cat_total = [i for i in input_catalog if i[3] < start_date]
+    catalog_prev = [i for i in cat_total if start_date - dt <= i[3] and
+                    i[2] >= mag_min]
 
     # Previous time-window rate
     lambd = len(catalog_prev)
-    print(lambd)
     # Background rate
     mu_total = len(cat_total) * (end_date - start_date) / (
             max([i[3] for i in cat_total]) - min([i[3] for i in cat_total]))
@@ -104,8 +99,8 @@ def make_forecast(catalog, args, n_sims=1000, seed=None, verbose=True):
         n_events = numpy.random.poisson(lambd)
         idx = numpy.random.choice(range(len(catalog_prev)), size=n_events)
 
-        random_cat = [cat_total[i] for i in idx_bg]
-        random_cat.extend([catalog_prev[i] for i in idx])
+        random_cat = deepcopy([cat_total[i] for i in idx_bg])
+        random_cat.extend(deepcopy([catalog_prev[i] for i in idx]))
 
         for i, event in enumerate(random_cat):
             # Positions remains the same as the random catalog
@@ -123,6 +118,8 @@ def make_forecast(catalog, args, n_sims=1000, seed=None, verbose=True):
             event[5] = n_cat
             event[6] = i
             forecast.append(event)
+
+    # if verbose:
     print(
         f'\tTotal of {len(forecast)} events M>{mag_min} in {n_sims}'
         f' synthetic catalogs')
