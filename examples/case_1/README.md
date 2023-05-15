@@ -28,11 +28,9 @@ The arguments file `case_1/inputs/args.txt` can be used for `run.py` from any di
 ```shell
 #from top directory
 python run.py examples/case_1/input/args.txt
-
 # or
 cd examples/case_1 
 python ../../run.py input/args.txt
-
 ```
 
 

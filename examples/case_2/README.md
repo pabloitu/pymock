@@ -1,5 +1,5 @@
 Running the model: Simulation of a large period
-===================
+===============================================
 
 This example illustrates how to run the model for consecutive time windows in a background year
 

@@ -2,7 +2,7 @@
 .. example_long_forecast
 
 Simple simulation of daily forecast for one year
-===================
+================================================
 
 This example demonstrates an illustrative case to run the model sequentially.
 

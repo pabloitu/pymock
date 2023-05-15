@@ -1,5 +1,5 @@
-Running the model: Simulation of a large period
-===============================================
+Running the model: Simulation of a intense large period
+=======================================================
 
 This example illustrates how to run the model for an intense simulation (L'Aquila sequence):
 

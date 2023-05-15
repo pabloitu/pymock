@@ -2,7 +2,7 @@
 .. example_background_day
 
 Simple simulation of a background day from a python script
-===================
+==========================================================
 
 This example demonstrates an illustrative case to run the model for an unremarkable day.
 
@@ -24,7 +24,7 @@ from matplotlib import pyplot
 
 ###############################################################################
 # Define forecast parameters
-# ------------
+# --------------------------
 
 catalog = load_cat('input/iside')
 args = {
