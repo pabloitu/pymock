@@ -30,7 +30,7 @@ def main(arg_path=None, folder=None, verbose=False):
 
     cat_path = args.get('catalog')
     n_sims = args.get('n_sims', 1000)  # Gets from args or default to 1000
-    seed = args.get('seed', None)        # Gets from args or default to seed
+    seed = args.get('seed', None)  # Gets from args or default to seed
 
     # 2. Reads input catalog
     catalog = libs.load_cat(path=cat_path)
@@ -61,6 +61,7 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     end_date = args['end_date']
     dt = end_date - start_date
     mag_min = args.get('mag_min', 4.0)
+    dist = args.get('distribution', 'poisson')
 
     # set seed for pseudo-random number gen
     if seed:
@@ -81,6 +82,20 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     obsmag_min = min([i[2] for i in cat_total])
     mu = mu_total * 10 ** (obsmag_min - mag_min)
 
+    if dist == 'negbinom':
+        cat_total_mag = [j for j in cat_total if j[2] >= mag_min]
+        times = [i[3] for i in cat_total_mag]
+        timewindows = numpy.arange(min(times).date(), max(times).date(), dt)
+        counts, _ = numpy.histogram(times, timewindows)
+        var = numpy.var(counts)
+        alpha = (var - mu) / mu ** 2
+        tau_bg = 1. / alpha * mu
+        theta_bg = tau_bg / (tau_bg + mu)
+
+        if lambd != 0:
+            tau = 1. / alpha * lambd
+            theta = tau / (tau + lambd)
+
     if verbose:
         print(
             f"Making forecast with model parameters:\n {args.__str__()}\n"
@@ -93,10 +108,20 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     # A simulated catalog has N_events ~ Poisson(rate_prevday)
     forecast = []
     for n_cat in range(n_sims):
-        n_events_bg = numpy.random.poisson(mu)
-        idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
+        if dist == 'poisson':
+            n_events_bg = numpy.random.poisson(mu)
+            n_events = numpy.random.poisson(lambd)
 
+        elif dist == 'negbinom':
+            n_events_bg = numpy.random.negative_binomial(tau_bg, theta_bg)
+            if lambd != 0:
+                n_events = numpy.random.negative_binomial(tau, theta)
+            else:
+                n_events = 0
+
+        idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
         n_events = numpy.random.poisson(lambd)
+
         idx = numpy.random.choice(range(len(catalog_prev)), size=n_events)
 
         random_cat = deepcopy([cat_total[i] for i in idx_bg])

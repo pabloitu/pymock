@@ -28,17 +28,18 @@ from matplotlib import pyplot
 
 catalog = load_cat('input/iside')
 args = {
-     'start_date': datetime(2011, 1, 1),
-     'end_date': datetime(2011, 1, 2),
-     'mag_min': 4.0,
+    'start_date': datetime(2011, 1, 1),
+    'end_date': datetime(2011, 1, 2),
+    'mag_min': 4.0,
 }
 
 ###############################################################################
 # Run simulations
 # ---------------
+nsims = 1000
 forecast = make_forecast(catalog,
                          args,
-                         n_sims=1000,
+                         n_sims=nsims,
                          seed=2)
 
 ###############################################################################
@@ -69,5 +70,5 @@ pyplot.scatter(lon, lat, s=numpy.array(mag) ** 3, c=n_syncat)
 pyplot.xlabel('lon')
 pyplot.ylabel('lat')
 pyplot.tight_layout()
-pyplot.savefig('forecasts/ex1_0-4')
+pyplot.savefig('forecasts/ex1_0-4.png')
 pyplot.show()

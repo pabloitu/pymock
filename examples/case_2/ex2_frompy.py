@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from pymock.main import make_forecast
 from pymock.libs import load_cat, write_forecast
 from matplotlib import pyplot
+
 ###############################################################################
 # Define forecast parameters
 # --------------------------
@@ -45,10 +46,10 @@ daily_forecasts = []
 
 for start, end in forecast_windows:
     args = {
-            'start_date': start,     # To be updated for every window
-            'end_date': end,
-            'mag_min': 4.0,
-                }
+        'start_date': start,  # To be updated for every window
+        'end_date': end,
+        'mag_min': 4.0,
+    }
     day = make_forecast(input_catalog=catalog,
                         args=args,
                         n_sims=n_sims,
@@ -71,10 +72,7 @@ catalog = [i for i in catalog if i[2] >= args['mag_min']]
 cat_events = []
 forecast_avg = []
 
-
-
 for window, forecast in zip(forecast_windows, daily_forecasts):
-
     # Get forecast mean rates
     cat_ids = [i[5] for i in forecast]
     events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
@@ -87,7 +85,6 @@ for window, forecast in zip(forecast_windows, daily_forecasts):
 
 cat_events = numpy.array(cat_events)
 issued_dates = numpy.array([i[0] for i in forecast_windows])
-
 
 # Plot
 pyplot.title('pyMock - Mean rate')
