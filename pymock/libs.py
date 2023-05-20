@@ -74,6 +74,8 @@ def read_args(path):
                                                  line_[1])
             elif line_[0] == 'mag_min':
                 params['mag_min'] = float(line_[1])
+            elif line_[0] == 'distribution':
+                params['distribution'] = line_[1]
             elif line_[0] == 'n_sims':
                 params['n_sims'] = int(line_[1])
             elif line_[0] == 'seed':
