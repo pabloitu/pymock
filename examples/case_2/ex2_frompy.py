@@ -75,8 +75,7 @@ forecast_avg = []
 for window, forecast in zip(forecast_windows, daily_forecasts):
     # Get forecast mean rates
     cat_ids = [i[5] for i in forecast]
-    events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
-    avg_events = numpy.sum(events_per_cat) / n_sims
+    avg_events = len(forecast) / n_sims
     forecast_avg.append(avg_events)
 
     # Get observed events
@@ -96,5 +95,6 @@ pyplot.legend()
 pyplot.xlabel('Date')
 pyplot.ylabel('Daily rate')
 pyplot.tight_layout()
+os.makedirs('forecasts', exist_ok=True)
 pyplot.savefig('forecasts/ex2_0-4')
 pyplot.show()

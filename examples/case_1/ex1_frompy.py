@@ -11,7 +11,7 @@ Overview:
     2. Run model function passing the model parameters as arguments
     3. Read the synthetic catalogs and plot them
 """
-import matplotlib.pyplot as plt
+
 ###############################################################################
 # Load required modules
 # -----------------------
@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy
 from datetime import datetime
 from pymock.main import make_forecast
-from pymock.libs import load_cat, syncat_path, write_forecast
+from pymock.libs import load_cat, write_forecast
 from matplotlib import pyplot
 
 ###############################################################################
@@ -60,13 +60,20 @@ write_forecast(start=args['start_date'],
 lon = [i[0] for i in forecast]
 lat = [i[1] for i in forecast]
 mag = [i[2] for i in forecast]
+mag = numpy.array(mag)
 n_syncat = [i[5] for i in forecast]
 
 region = numpy.genfromtxt('input/region')
 
-pyplot.title('pyMock - synthetic catalogs 0-4')
-pyplot.plot(region[:, 0], region[:, 1])
-pyplot.scatter(lon, lat, s=numpy.array(mag) ** 3, c=n_syncat)
+
+pyplot.title('pyMock - synthetic catalogs')
+pyplot.plot(region[:, 0], region[:, 1], ls='--', c='0.3')
+# pyplot.scatter(lon, lat, s=numpy.array(mag) ** 3, c=n_syncat)
+pyplot.scatter(lon, lat, s=12 + 10**(mag - mag.min() + 0.5),
+               c=n_syncat, alpha=0.5, ec='none')  # [mh mod]
+pyplot.gca().set_aspect('equal', adjustable='box')  # (only approximate)
+cbar = pyplot.colorbar()
+cbar.ax.set_ylabel('Catalog N°')
 pyplot.xlabel('lon')
 pyplot.ylabel('lat')
 pyplot.tight_layout()

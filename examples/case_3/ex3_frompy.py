@@ -20,7 +20,6 @@ Overview:
 # -----------------------
 
 import numpy
-import os
 import time
 from datetime import datetime, timedelta
 
@@ -62,7 +61,7 @@ for start, end in forecast_windows:
                         seed=numpy.random.randint(1, 10000),
                         verbose=False)
 
-    # Uncomment to store forecast
+    # Comment to *not* store forecasts
     write_forecast(start, end, day, './forecasts/')
 
     daily_forecasts.append(day)
@@ -73,24 +72,25 @@ print(f'Run-Time: {time.perf_counter() - stime:1f}')
 # Load forecasted synthetic catalogs, get mean rate and plot them all together
 # ----------------------------------------------------------------------------
 
-cat = load_cat(os.path.join('input', 'iside'))
-cat = [i for i in cat if i[2] >= mag_min]
-
+catalog = [i for i in catalog if i[2] >= mag_min]
 cat_events = []
 forecast_avg = []
 
-for start, end in forecast_windows:
-    syncat = load_cat(syncat_path(start, end, 'forecasts'))
-    cat_ids = [i[5] for i in syncat]
-    events_per_cat = numpy.unique(cat_ids, return_counts=True)[1]
-    avg_events = numpy.sum(events_per_cat) / n_sims
+for window, forecast in zip(forecast_windows, daily_forecasts):
+    # forecast = load_cat(syncat_path(*window, 'forecasts'))
+
+    # Get forecast mean rates
+    cat_ids = [i[5] for i in forecast]
+    avg_events = len(forecast) / n_sims
     forecast_avg.append(avg_events)
 
-    day_cat = [i for i in cat if i[3] >= start]
-    day_cat = [i for i in day_cat if i[3] < end]
+    # Get observed events
+    day_cat = [i for i in catalog if window[0] <= i[3] < window[1]]
     cat_events.append(len(day_cat))
 
 issued_dates = numpy.array([i[0] for i in forecast_windows])
+
+# Plot
 fig = pyplot.figure(figsize=(8, 4))
 pyplot.title("pyMock - L'Aquila sequence")
 pyplot.plot(issued_dates, cat_events, label='Observed events')
@@ -100,5 +100,6 @@ pyplot.xlabel('Date')
 pyplot.ylabel('Daily rate')
 pyplot.grid()
 pyplot.tight_layout()
+os.makedirs('forecasts', exist_ok=True)
 pyplot.savefig('forecasts/ex3_0-4')
 pyplot.show()
