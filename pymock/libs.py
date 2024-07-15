@@ -49,7 +49,7 @@ def write_forecast(start, end, forecast, folder=None):
         folder = 'forecasts'
     os.makedirs(folder, exist_ok=True)
     with open(syncat_path(start, end, folder), 'w') as file_:
-        file_.write('lon, lat, M, time_string, depth, catalog_id, event_id\n')
+        file_.write('lon,lat,mag,time_string,depth,catalog_id,event_id\n')
         for event in forecast:
             line = f'{event[0]},{event[1]},{event[2]:.2f},' \
                    f'{event[3].isoformat()},{event[4]},{event[5]},{event[6]}\n'
