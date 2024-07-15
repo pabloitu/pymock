@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import timedelta
 import numpy
 from pymock import libs
 from copy import deepcopy
@@ -57,30 +58,40 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
         seed (int): seed for random number generation
         verbose (bool): Flag to print out the logging.
     """
-    start_date = args['start_date']
+    t0 = args['start_date']
     end_date = args['end_date']
-    dt = end_date - start_date
+    dt_forecast = end_date - t0
+    dt_prev = timedelta(args.get('lookback_days', dt_forecast.days))
     mag_min = args.get('mag_min', 4.0)
     dist = args.get('distribution', 'poisson')
+
+    # *predefine* mag threshold, actually magnitude of completeness (Mc);
+    # will be used with b-value of 1 to correct BG activity (and optionally recent activity) to M4+
+    mag_compl = min([i[2] for i in input_catalog if i[3] < t0])
+    mag_compl = args.get('mag_compl', mag_compl)
 
     # set seed for pseudo-random number gen
     if seed:
         numpy.random.seed(seed)
-    # filter catalog
 
-    cat_total = [i for i in input_catalog if i[3] < start_date]
-    catalog_prev = [i for i in cat_total if start_date - dt <= i[3] and
-                    i[2] >= mag_min]
+    # filter catalog
+    cat_total = [i for i in input_catalog if i[3] < t0 and
+                 i[2] >= mag_compl]  # only above completeness lvl
+    mag_thresh_prev = mag_compl if args.get('apply_mc_to_lambda', False) else mag_min  # (see above)
+    catalog_prev = [i for i in cat_total if t0 - dt_prev <= i[3] and
+                    i[2] >= mag_thresh_prev]
 
     # Previous time-window rate
-    lambd = len(catalog_prev)
+    # lambd = len(catalog_prev)
+    lambd = len(catalog_prev) / dt_prev.days  # normalize to 1 day (the forecast length) --> smooth
+    lambd *= 10 ** (mag_thresh_prev - mag_min)  # correct to mag_min (M4+) using b-value of 1 (see above)
+
     # Background rate
-    mu_total = len(cat_total) * (end_date - start_date) / (
-            max([i[3] for i in cat_total]) - min([i[3] for i in cat_total]))
+    mu_total = len(cat_total) * (end_date - t0) / (
+            t0 - min([i[3] for i in cat_total]))
 
     # scale by GR with b=1
-    obsmag_min = min([i[2] for i in cat_total])
-    mu = mu_total * 10 ** (obsmag_min - mag_min)
+    mu = mu_total * 10 ** (mag_compl - mag_min)
 
     if dist == 'negbinom':
         cat_total_mag = [j for j in cat_total if j[2] >= mag_min]
