@@ -67,7 +67,10 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
 
     # *predefine* mag threshold, actually magnitude of completeness (Mc);
     # will be used with b-value of 1 to correct BG activity (and optionally recent activity) to M4+
-    mag_compl = min([i[2] for i in input_catalog if i[3] < t0])
+    # Btw: should *not* be below the true Mc of the catalog, otherwise this adjustment is flawed;
+    #      (--> should not blindly depend on catalog's min mag)
+    # mag_compl = min([i[2] for i in input_catalog if i[3] < t0])  # WRONG! (reproduces former forecasts)
+    mag_compl = 2.0  # (a conservative Mc estimate for ISIDE)
     mag_compl = args.get('mag_compl', mag_compl)
 
     # set seed for pseudo-random number gen
@@ -76,7 +79,7 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
 
     # filter catalog
     cat_total = [i for i in input_catalog if i[3] < t0 and
-                 i[2] >= mag_compl]  # only above completeness lvl
+                 i[2] >= mag_compl]  # only above completeness lvl (for reasons mentioned above)
     mag_thresh_prev = mag_compl if args.get('apply_mc_to_lambda', False) else mag_min  # (see above)
     catalog_prev = [i for i in cat_total if t0 - dt_prev <= i[3] and
                     i[2] >= mag_thresh_prev]
