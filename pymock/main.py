@@ -120,6 +120,12 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
 
     # The model creates a random selection of N events from the input_catalog
     # A simulated catalog has N_events ~ Poisson(rate_prevday)
+
+    # Speedup #1: outsource from below
+    mag_bins = numpy.arange(mag_min, 8.1, 0.1)
+    prob_mag = 10 ** (-mag_bins[:-1]) - 10 ** (-mag_bins[1:])  # GR with b=1
+    prob_mag /= numpy.sum(prob_mag)
+
     forecast = []
     for n_cat in range(n_sims):
         if dist == 'poisson':
@@ -133,30 +139,36 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
             else:
                 n_events = 0
 
+        # Sample BG events
         idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
         n_events = numpy.random.poisson(lambd)
+        # random_cat = deepcopy([cat_total[i] for i in idx_bg])
+        random_cat = [cat_total[i] for i in idx_bg]  # speedup #2: avoid deepcopying whole catalog
 
+        # Sample from "current" seismicity
         idx = numpy.random.choice(range(len(catalog_prev)), size=n_events)
-
-        random_cat = deepcopy([cat_total[i] for i in idx_bg])
-        random_cat.extend(deepcopy([catalog_prev[i] for i in idx]))
+        # random_cat.extend(deepcopy([catalog_prev[i] for i in idx]))
+        random_cat.extend([catalog_prev[i] for i in idx])  # speedup #2: avoid deepcopying
 
         for i, event in enumerate(random_cat):
-            # Positions remains the same as the random catalog
-            # Get the magnitude value using GR with b=1
-            mag_bins = numpy.arange(mag_min, 8.1, 0.1)
-            prob_mag = 10 ** (-mag_bins[:-1]) - 10 ** (-mag_bins[1:])
-            mag = numpy.random.choice(mag_bins[:-1],
-                                      p=prob_mag / numpy.sum(prob_mag))
-            event[2] = mag
+            # Positions remain the same as in the randomly sampled catalog
+
+            # Speedup #2 (avoid deepcopy) - Variant 1: copy each item on-the-fly
+            # event = event[:]  # makes a copy (!)
+
+            mag = numpy.random.choice(mag_bins[:-1], p=prob_mag)
+
+            # event[2] = mag
             # For each event, assigns a random datetime between start and end:
-            dt = numpy.random.random() * (
-                    args['end_date'] - args['start_date'])
-            event[3] = args['start_date'] + dt
+            dt_rnd = numpy.random.random() * dt_forecast
+            # event[3] = args['start_date'] + dt_rnd
             # Replace events and catalog ids
-            event[5] = n_cat
-            event[6] = i
-            forecast.append(event)
+            # event[5] = n_cat
+            # event[6] = i
+            # forecast.append(event)
+
+            # Speedup #2 (avoid deepcopy) - Variant 2: construct new entries & append
+            forecast.append([*event[0:2], mag, args['start_date'] + dt_rnd, event[4], n_cat, i])
 
     # if verbose:
     print(
