@@ -141,7 +141,6 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
 
         # Sample BG events
         idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
-        n_events = numpy.random.poisson(lambd)
         # random_cat = deepcopy([cat_total[i] for i in idx_bg])
         random_cat = [cat_total[i] for i in idx_bg]  # speedup #2: avoid deepcopying whole catalog
 
