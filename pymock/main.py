@@ -3,7 +3,6 @@ import sys
 from datetime import timedelta
 import numpy
 from pymock import libs
-from copy import deepcopy
 
 
 def main(arg_path=None, folder=None, verbose=False):
@@ -60,8 +59,8 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     """
     t0 = args['start_date']
     end_date = args['end_date']
-    dt_forecast = end_date - t0
-    dt_prev = timedelta(args.get('lookback_days', dt_forecast.days))
+    dt_forecast = end_date - t0 + timedelta(seconds=1)
+    dt_prev = timedelta(args.get('lookback_days', dt_forecast.total_seconds() / 86400))
     mag_min = args.get('mag_min', 4.0)
     dist = args.get('distribution', 'poisson')
 
