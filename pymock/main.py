@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 import numpy
 from pymock import libs
 
@@ -57,12 +57,12 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
         seed (int): seed for random number generation
         verbose (bool): Flag to print out the logging.
     """
-    t0 = args['start_date']
-    end_date = args['end_date']
+    t0: datetime = args['start_date']
+    end_date: datetime = args['end_date']
     dt_forecast = end_date - t0 + timedelta(seconds=1)
     dt_prev = timedelta(args.get('lookback_days', dt_forecast.total_seconds() / 86400))
-    mag_min = args.get('mag_min', 4.0)
-    dist = args.get('distribution', 'poisson')
+    mag_min: float | int = args.get('mag_min', 4.0)
+    dist: str = args.get('distribution', 'poisson')
 
     # *predefine* mag threshold, actually magnitude of completeness (Mc);
     # will be used with b-value of 1 to correct BG activity (and optionally recent activity) to M4+
@@ -83,14 +83,13 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     catalog_prev = [i for i in cat_total if t0 - dt_prev <= i[3] and
                     i[2] >= mag_thresh_prev]
 
-    # Previous time-window rate
-    # lambd = len(catalog_prev)
-    lambd = len(catalog_prev) / dt_prev.days  # normalize to 1 day (the forecast length) --> smooth
-    lambd *= 10 ** (mag_thresh_prev - mag_min)  # correct to mag_min (M4+) using b-value of 1 (see above)
+    # Previous time-window rate (normalized to forecast length)
+    lambd = len(catalog_prev) / dt_prev.total_seconds() * dt_forecast.total_seconds()
+    lambd *= 10 ** (mag_thresh_prev - mag_min)  # correct to mag_min using b-value of 1 (see above)
 
-    # Background rate
-    mu_total = len(cat_total) * (end_date - t0) / (
-            t0 - min([i[3] for i in cat_total]))
+    # Background rate (normalized to forecast length)
+    mu_total = len(cat_total) * dt_forecast.total_seconds() / (
+        t0 - min([i[3] for i in cat_total])).total_seconds()
 
     # scale by GR with b=1
     mu = mu_total * 10 ** (mag_compl - mag_min)
@@ -98,7 +97,7 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     if dist == 'negbinom':
         cat_total_mag = [j for j in cat_total if j[2] >= mag_min]
         times = [i[3] for i in cat_total_mag]
-        timewindows = numpy.arange(min(times).date(), max(times).date(), dt)
+        timewindows = numpy.arange(min(times).date(), max(times).date(), dt_forecast)
         counts, _ = numpy.histogram(times, timewindows)
         var = numpy.var(counts)
         alpha = (var - mu) / mu ** 2
