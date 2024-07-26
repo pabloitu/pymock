@@ -1,8 +1,8 @@
 import os
 import sys
+from datetime import datetime, timedelta
 import numpy
 from pymock import libs
-from copy import deepcopy
 
 
 def main(arg_path=None, folder=None, verbose=False):
@@ -57,35 +57,46 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
         seed (int): seed for random number generation
         verbose (bool): Flag to print out the logging.
     """
-    start_date = args['start_date']
-    end_date = args['end_date']
-    dt = end_date - start_date
-    mag_min = args.get('mag_min', 4.0)
-    dist = args.get('distribution', 'poisson')
+    t0: datetime = args['start_date']
+    end_date: datetime = args['end_date']
+    dt_forecast = end_date - t0
+    dt_prev = timedelta(args.get('lookback_days', dt_forecast.total_seconds() / 86400))
+    mag_min: float | int = args.get('mag_min', 4.0)
+    dist: str = args.get('distribution', 'poisson')
 
-    # set seed for pseudo-random number gen
+    # Predefine magnitude of completeness, Mc;
+    # will be used with b-value = 1 to scale BG activity from M >= Mc to M >= mag_min
+    #   (same optionally also for recent activity if 'apply_mc_to_lambda' is True)
+    # Note: should not be too low/optimistic, otherwise this adjustment is flawed
+    #       (due to incompleteness)
+    mag_compl = 2.0  # (a conservative Mc estimate for ISIDE)
+    mag_compl = args.get('mag_compl', mag_compl)
+
+    # Set seed for pseudo-random number gen
     if seed:
         numpy.random.seed(seed)
-    # filter catalog
 
-    cat_total = [i for i in input_catalog if i[3] < start_date]
-    catalog_prev = [i for i in cat_total if start_date - dt <= i[3] and
-                    i[2] >= mag_min]
+    # Filter catalog
+    cat_total = [i for i in input_catalog if i[3] < t0 and
+                 i[2] >= mag_compl]  # only above completeness lvl (for reasons mentioned above)
+    mag_thresh_prev = mag_compl if args.get('apply_mc_to_lambda', False) else mag_min  # (see above)
+    catalog_prev = [i for i in cat_total if t0 - dt_prev <= i[3] and
+                    i[2] >= mag_thresh_prev]
 
-    # Previous time-window rate
-    lambd = len(catalog_prev)
-    # Background rate
-    mu_total = len(cat_total) * (end_date - start_date) / (
-            max([i[3] for i in cat_total]) - min([i[3] for i in cat_total]))
+    # Previous time-window rate (normalized to forecast length)
+    lambd = len(catalog_prev) / dt_prev.total_seconds() * dt_forecast.total_seconds()
+    lambd *= 10 ** (mag_thresh_prev - mag_min)  # correct to mag_min using b-value of 1 (see above)
 
-    # scale by GR with b=1
-    obsmag_min = min([i[2] for i in cat_total])
-    mu = mu_total * 10 ** (obsmag_min - mag_min)
+    # Background rate (normalized to forecast length)
+    mu_total = len(cat_total) * dt_forecast.total_seconds() / (
+        t0 - min([i[3] for i in cat_total])).total_seconds()
+
+    mu = mu_total * 10 ** (mag_compl - mag_min)  # scale by GR with b=1
 
     if dist == 'negbinom':
         cat_total_mag = [j for j in cat_total if j[2] >= mag_min]
         times = [i[3] for i in cat_total_mag]
-        timewindows = numpy.arange(min(times).date(), max(times).date(), dt)
+        timewindows = numpy.arange(min(times).date(), max(times).date(), dt_forecast)
         counts, _ = numpy.histogram(times, timewindows)
         var = numpy.var(counts)
         alpha = (var - mu) / mu ** 2
@@ -104,8 +115,15 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
             f" seed:{locals()['seed']}")
         print(f'\tmu: {mu:.2e}\n\tlambda:{lambd:.2e}')
 
-    # The model creates a random selection of N events from the input_catalog
-    # A simulated catalog has N_events ~ Poisson(rate_prevday)
+    # -- Simulating events
+    # The model creates a random selection of N events from the input_catalog,
+    # e.g., a simulated catalog has N_events ~ Poisson(rate_prevday)
+
+    # Create Gutenberg-Richter (GR) distribution
+    mag_bins = numpy.arange(mag_min, 8.1, 0.1)
+    prob_mag = 10 ** (-mag_bins[:-1]) - 10 ** (-mag_bins[1:])  # GR with b=1
+    prob_mag /= numpy.sum(prob_mag)
+
     forecast = []
     for n_cat in range(n_sims):
         if dist == 'poisson':
@@ -119,30 +137,21 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
             else:
                 n_events = 0
 
+        # Sample BG events
         idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
-        n_events = numpy.random.poisson(lambd)
+        random_cat = [cat_total[i] for i in idx_bg]
 
+        # Sample from recent seismicity
         idx = numpy.random.choice(range(len(catalog_prev)), size=n_events)
-
-        random_cat = deepcopy([cat_total[i] for i in idx_bg])
-        random_cat.extend(deepcopy([catalog_prev[i] for i in idx]))
+        random_cat.extend([catalog_prev[i] for i in idx])
 
         for i, event in enumerate(random_cat):
-            # Positions remains the same as the random catalog
-            # Get the magnitude value using GR with b=1
-            mag_bins = numpy.arange(mag_min, 8.1, 0.1)
-            prob_mag = 10 ** (-mag_bins[:-1]) - 10 ** (-mag_bins[1:])
-            mag = numpy.random.choice(mag_bins[:-1],
-                                      p=prob_mag / numpy.sum(prob_mag))
-            event[2] = mag
-            # For each event, assigns a random datetime between start and end:
-            dt = numpy.random.random() * (
-                    args['end_date'] - args['start_date'])
-            event[3] = args['start_date'] + dt
-            # Replace events and catalog ids
-            event[5] = n_cat
-            event[6] = i
-            forecast.append(event)
+            # Locations remain the same as in the randomly sampled catalog
+
+            mag = numpy.random.choice(mag_bins[:-1], p=prob_mag)  # sample from GR
+            t = t0 + numpy.random.random() * dt_forecast  # random datetime between t0 and end_date
+
+            forecast.append([*event[0:2], mag, t, event[4], n_cat, i])
 
     # if verbose:
     print(

@@ -11,4 +11,11 @@ n_sims = 100
 
 mag_min = 4.0
 
+## Optional parameters (here: default values)
 
+distribution = poisson
+
+### Additional parameters to create pymock variants
+lookback_days = 1
+mag_compl = 2.0
+apply_mc_to_lambda = False
