@@ -65,24 +65,30 @@ def read_args(path):
     Parses an arguments file. This file should be build as:
     {argument} = {argument_value}
     """
-    params = {'start_date': None, 'end_date': None}
+
+    map_dict = {  # lists all supported params and their string -> type mapping
+        "start_date": datetime.fromisoformat,
+        "end_date": datetime.fromisoformat,
+        "catalog": lambda x: os.path.join(os.path.dirname(path), x),
+        "mag_min": float,
+        "n_sims": int,
+        "seed": int,
+        "distribution": str,
+        "lookback_days": int,
+        "mag_compl": float,
+        "apply_mc_to_lambda": bool
+    }
+
+    params = {}
+
     with open(path) as f_:
         for line in f_.readlines():
             line_ = [i.strip() for i in line.split('=')]
-            if line_[0] == 'start_date':
-                params['start_date'] = datetime.fromisoformat(line_[1])
-            elif line_[0] == 'end_date':
-                params['end_date'] = datetime.fromisoformat(line_[1])
-            elif line_[0] == 'catalog':
-                params['catalog'] = os.path.join(os.path.dirname(path),
-                                                 line_[1])
-            elif line_[0] == 'mag_min':
-                params['mag_min'] = float(line_[1])
-            elif line_[0] == 'distribution':
-                params['distribution'] = line_[1]
-            elif line_[0] == 'n_sims':
-                params['n_sims'] = int(line_[1])
-            elif line_[0] == 'seed':
-                params['seed'] = int(line_[1])
+            if line_[0] not in map_dict:
+                continue
+            if len(line_) > 2:
+                raise ValueError(f"Value of property '{line_[0]}' contains '=' character.")
+            k, v = line_
+            params[k] = map_dict.get(k, str)(v)
 
     return params
