@@ -6,14 +6,18 @@ def syncat_path(start, end, folder):
     """
     Returns the file path of a forecast based on its start and end dates.
     """
-    midnight = time(0, 0, 0)
-    if start.time() == midnight and end.time() == midnight:
-        start = start.date()
-        end = end.date()
 
-    return os.path.join(folder,
-                        f"pymock_{start.isoformat()}_{end.isoformat()}.csv"
-                        )
+    variant = 'long'
+    variant = 'short'  # hardcode
+
+    if variant == 'short':
+        return os.path.join(folder, f'pymock_{start.date().isoformat()}.csv')
+
+    # Long version
+    filename = f"pymock_{start.isoformat()}_{end.isoformat()}.csv"
+    if os.name == 'nt':
+        filename.replace(':', '.')  # on Windows, filenames cannot contain ':'
+    return os.path.join(folder, filename)
 
 
 def load_cat(path):
