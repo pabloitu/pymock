@@ -78,5 +78,7 @@ def read_args(path):
                 params['n_sims'] = int(line_[1])
             elif line_[0] == 'seed':
                 params['seed'] = int(line_[1])
+            elif line_[0] == 'distribution':
+                params['distribution'] = str(line_[1])
 
     return params
