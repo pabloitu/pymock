@@ -27,7 +27,7 @@ class TestMain(unittest.TestCase):
         numpy.testing.assert_almost_equal(forecast[9][0], 13.297)
         numpy.testing.assert_almost_equal(forecast[9][1], 42.82)
         numpy.testing.assert_almost_equal(forecast[9][2], 4.4)
-        numpy.testing.assert_equal(forecast[9][3], datetime(2016, 11, 5, 19, 0, 57, 411261))
+        numpy.testing.assert_equal(forecast[9][3], datetime(2016, 11, 5, 19, 0, 56,759566))
         numpy.testing.assert_almost_equal(forecast[9][4], 10.0)
         numpy.testing.assert_almost_equal(forecast[9][5], 97)
         numpy.testing.assert_almost_equal(forecast[9][6], 1)

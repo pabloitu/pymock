@@ -24,7 +24,7 @@ class TestMain(unittest.TestCase):
         libs.write_forecast(start, end, forecast, folder=write_path)
 
         # File exist
-        time_str = f'{start.date().isoformat()}_{end.date().isoformat()}'
+        time_str = f'{start.date().isoformat()}'
         fpath = os.path.join(write_path, f'pymock_{time_str}.csv')
         assert os.path.isfile(fpath)
 
