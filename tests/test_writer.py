@@ -1,4 +1,5 @@
 import os
+import unittest
 from pymock import libs
 from datetime import datetime
 
@@ -9,34 +10,36 @@ current_dir = os.path.dirname(__file__)
 write_path = os.path.join(current_dir, 'artifacts')
 
 
-def test_catwrite():
-    start = datetime(2022, 10, 1)
-    end = datetime(2022, 10, 2)
-    forecast = [
-        [123.12, -74.52, 1.5, start, 10, 0, 0],  # event 0, syncat 0
-        [-38.24, -73.05, 9.5, start, 33, 1, 0],  # event 0, syncat 1
-        [60.908, -147.339, 9.2, start, 25, 1, 1]  # event 1, syncat 1
-    ]
+class TestMain(unittest.TestCase):
 
-    libs.write_forecast(start, end, forecast, folder=write_path)
+    def test_catwrite(self):
+        start = datetime(2022, 10, 1)
+        end = datetime(2022, 10, 2)
+        forecast = [
+            [123.12, -74.52, 1.5, start, 10, 0, 0],  # event 0, syncat 0
+            [-38.24, -73.05, 9.5, start, 33, 1, 0],  # event 0, syncat 1
+            [60.908, -147.339, 9.2, start, 25, 1, 1]  # event 1, syncat 1
+        ]
 
-    # File exist
-    time_str = f'{start.date().isoformat()}_{end.date().isoformat()}'
-    fpath = os.path.join(write_path, f'pymock_{time_str}.csv')
-    assert os.path.isfile(fpath)
+        libs.write_forecast(start, end, forecast, folder=write_path)
 
-    # Read raw data from written forecast
-    with open(fpath, 'r') as file_:
-        data = file_.readlines()
+        # File exist
+        time_str = f'{start.date().isoformat()}'
+        fpath = os.path.join(write_path, f'pymock_{time_str}.csv')
+        assert os.path.isfile(fpath)
 
-    # Event str
-    event1st_str = '123.12,-74.52,1.50,2022-10-01T00:00:00,10,0,0\n'
-    assert data[1] == event1st_str
+        # Read raw data from written forecast
+        with open(fpath, 'r') as file_:
+            data = file_.readlines()
 
-    # Datetime
-    date_event = data[2].split(',')[3]
-    assert datetime.fromisoformat(date_event) == forecast[1][3]
+        # Event str
+        event1st_str = '123.12,-74.52,1.50,2022-10-01T00:00:00,10,0,0\n'
+        assert data[1] == event1st_str
+
+        # Datetime
+        date_event = data[2].split(',')[3]
+        assert datetime.fromisoformat(date_event) == forecast[1][3]
 
 
 if __name__ == '__main__':
-    test_catwrite()
+    TestMain().test_catwrite()
