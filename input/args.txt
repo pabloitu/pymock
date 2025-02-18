@@ -1,6 +1,6 @@
 # pymock input arguments #
 
-## Experiment obligatory parameters. They should have a default value##
+## Experiment obligatory parameters. They should have a default value
 
 ### Testing time window 1 day
 start_date = 2018-07-02T00:00:00
@@ -13,9 +13,16 @@ mag_min = 4.0
 
 ## Optional parameters (here: default values)
 
+# Distribution to use for sampling event numbers; poisson or negbinom
 distribution = poisson
 
 ### Additional parameters to create pymock variants
+
+# Window length [in units of days] to use for determining the 'recent seismicity' rate
 lookback_days = 1
+
+# Completeness magnitude and whether to use it for extracting 'recent seismicity' (rates & location sampling)
+# If `apply_mc_to_lookback` is False, recent seismicity is based on mag_min.
+# Note: with negbinom distribution, these two parameters only affect location sampling, not parameter estimation
 mag_compl = 2.0
-apply_mc_to_lambda = False
+apply_mc_to_lookback = False

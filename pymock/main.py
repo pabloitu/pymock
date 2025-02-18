@@ -61,51 +61,97 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
     end_date: datetime = args['end_date']
     dt_forecast = end_date - t0
     dt_prev = timedelta(args.get('lookback_days', dt_forecast.total_seconds() / 86400))
-    mag_min: float | int = args.get('mag_min', 4.0)
+    mag_min: float | int = args.get('mag_min', 4.0)  # magnitude threshold for forecasting events
     dist: str = args.get('distribution', 'poisson')
-
-    # Predefine magnitude of completeness, Mc;
-    # will be used with b-value = 1 to scale BG activity from M >= Mc to M >= mag_min
-    #   (same optionally also for recent activity if 'apply_mc_to_lambda' is True)
-    # Note: should not be too low/optimistic, otherwise this adjustment is flawed
-    #       (due to incompleteness)
-    mag_compl = 2.0  # (a conservative Mc estimate for ISIDE)
-    mag_compl = args.get('mag_compl', mag_compl)
 
     # Set seed for pseudo-random number gen
     if seed:
         numpy.random.seed(seed)
 
     # Filter catalog
-    cat_total = [i for i in input_catalog if i[3] < t0 and
-                 i[2] >= mag_compl]  # only above completeness lvl (for reasons mentioned above)
-    mag_thresh_prev = mag_compl if args.get('apply_mc_to_lambda', False) else mag_min  # (see above)
-    catalog_prev = [i for i in cat_total if t0 - dt_prev <= i[3] and
-                    i[2] >= mag_thresh_prev]
+    catalog_start = min([i[3] for i in input_catalog])
+    cat_past = [i for i in input_catalog if i[3] < t0]
+    cat_prev = [i for i in cat_past if i[3] >= t0 - dt_prev]
 
-    # Previous time-window rate (normalized to forecast length)
-    lambd = len(catalog_prev) / dt_prev.total_seconds() * dt_forecast.total_seconds()
-    lambd *= 10 ** (mag_thresh_prev - mag_min)  # correct to mag_min using b-value of 1 (see above)
+    # Predefine magnitude of completeness, Mc
+    # Note: should not be too low/optimistic, otherwise incompleteness effects will prevail:
+    #       - only for Poisson: biased rate estimation and biased scaling of `mu` to `mag_min`
+    #       - sampling locations of very small events that may be too uncertain
+    mag_compl = 2.0  # (a conservative Mc estimate for ISIDE)
+    mag_compl = args.get('mag_compl', mag_compl)
 
-    # Background rate (normalized to forecast length)
-    mu_total = len(cat_total) * dt_forecast.total_seconds() / (
-        t0 - min([i[3] for i in cat_total])).total_seconds()
+    # Create complete catalog of past seismicity; used for:
+    #  - only for Poisson: estimating BG seismicity parameter (mu)
+    #  - sampling (locations of) background events for the catalog-based forecasts
+    cat_past_compl = [i for i in cat_past if i[2] >= mag_compl]
 
-    mu = mu_total * 10 ** (mag_compl - mag_min)  # scale by GR with b=1
+    # Create a magnitude-thresholded catalog of recent seismicity; used for:
+    #   - only for Poisson: estimating rate parameter of recent seismicity (lambda)
+    #   - sampling (locations of) recent events for the catalog-based forecasts
+    # If 'apply_mc_to_lookback' is True, this threshold will be the Mc level (mag_compl),
+    # otherwise the forecast threshold (mag_min).
+    mag_thresh_prev = mag_compl if args.get('apply_mc_to_lookback', False) else mag_min
+    cat_prev_thresh = [i for i in cat_prev if i[2] >= mag_thresh_prev]
 
-    if dist == 'negbinom':
-        cat_total_mag = [j for j in cat_total if j[2] >= mag_min]
-        times = [i[3] for i in cat_total_mag]
-        timewindows = numpy.arange(min(times).date(), max(times).date(), dt_forecast)
-        counts, _ = numpy.histogram(times, timewindows)
-        var = numpy.var(counts)
-        alpha = (var - mu) / mu ** 2
-        tau_bg = 1. / alpha * mu
-        theta_bg = tau_bg / (tau_bg + mu)
+    if dist == 'poisson':
 
-        if lambd != 0:
-            tau = 1. / alpha * lambd
-            theta = tau / (tau + lambd)
+        # Background rate (normalized to forecast length)
+        mu_compl = len(cat_past_compl) * dt_forecast.total_seconds() / (
+            t0 - catalog_start).total_seconds()
+        mu = mu_compl * 10**(mag_compl - mag_min)  # scale to mag_min using GR with b=1 (see above)
+
+        # Previous time-window rate (normalized to forecast length)
+        lambd = len(cat_prev_thresh) / dt_prev.total_seconds() * dt_forecast.total_seconds()
+        lambd *= 10**(mag_thresh_prev - mag_min)  # scale to mag_min using GR with b=1 (see above)
+
+    elif dist == 'negbinom':
+        # Negative binomial distribution to model overdispersion (with a second parameter)
+        # Important: must only use events above mag_min for estimating its parameters
+        #      (because the variance/dispersion parameter cannot be simply adjusted to a
+        #       different magnitude threshold)
+
+        def calc_negbinom_params(mean, var):
+
+            if mean == 0:  # (and therefore var == 0)
+                return 1, 1  # to only sample zeros; value of tau is arbitrary
+
+            alpha = (var - mean) / mean**2  # dispersion parameter
+
+            if alpha == 0:  # (when var == mean)
+                lim_tau = 1e6  # NBD converges converges to Poisson in the limit of r
+                return lim_tau, lim_tau / (lim_tau + mean)  # will effectively resemble Poisson
+
+            tau = 1 / alpha  # number of successes; > 0
+            # theta = tau / (tau + mean)  # success probability; [0, 1]
+            theta = mean / var  # equiv.
+
+            return tau, theta
+
+        # 1. Background component
+        cat_past_minmag = [i for i in cat_past if i[2] >= mag_min]
+        time_edges = numpy.arange(catalog_start.date(), t0.date() + dt_forecast, dt_forecast)
+        counts, _ = numpy.histogram([i[3] for i in cat_past_minmag], time_edges)
+        assert sum(counts) == len(cat_past_minmag)  # (FYI)
+
+        mean_bg = numpy.mean(counts)  # equiv: len(cat_past_minmag) / len(timewindows[:-1])
+        var_bg = numpy.var(counts)  # modeled as mean + mean**2/tau = mean + alpha*mean**2
+        if var_bg < mean_bg:  # underdispersed
+            # (NBD implicitely requires `var_bg` >= `mean_bg`: '==': Poisson; '>': overdispersed)
+            var_bg = mean_bg  # make it (at least) Poissonian
+
+        tau_bg, theta_bg = calc_negbinom_params(mean_bg, var_bg)
+
+        # 2. 'Recent' (previous time-window) component
+        cat_prev_minmag = [i for i in cat_prev if i[2] >= mag_min]
+        mean = len(cat_prev_minmag) / dt_prev.total_seconds() * dt_forecast.total_seconds()
+        # Use dispersion of BG for estimating variance from mean (leads to theta == theta_bg)
+        dispersion_bg = var_bg / mean_bg if var_bg > 0 else 1.
+        var = mean * dispersion_bg
+
+        tau, theta = calc_negbinom_params(mean, var)
+
+    else:
+        raise RuntimeError(f"Distribution '{dist}' not implemented.")
 
     if verbose:
         print(
@@ -113,7 +159,11 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
             f"and simulation parameters:\n"
             f" n_sims:{locals()['n_sims']}\n"
             f" seed:{locals()['seed']}")
-        print(f'\tmu: {mu:.2e}\n\tlambda:{lambd:.2e}')
+        if dist == 'poisson':
+            print(f"\tmu: {mu:.2e}\n\tlambda:{lambd:.2e}")
+        elif dist == 'negbinom':
+            print(f"\tmean_bg: {mean_bg:.2e}\tvar_bg:{var_bg:.2e}")
+            print(f"\tmean: {mean:.2e}\tvar:{var:.2e}")
 
     # -- Simulating events
     # The model creates a random selection of N events from the input_catalog,
@@ -132,18 +182,15 @@ def make_forecast(input_catalog, args, n_sims=1000, seed=None, verbose=True):
 
         elif dist == 'negbinom':
             n_events_bg = numpy.random.negative_binomial(tau_bg, theta_bg)
-            if lambd != 0:
-                n_events = numpy.random.negative_binomial(tau, theta)
-            else:
-                n_events = 0
+            n_events = numpy.random.negative_binomial(tau, theta)
 
         # Sample BG events
-        idx_bg = numpy.random.choice(range(len(cat_total)), size=n_events_bg)
-        random_cat = [cat_total[i] for i in idx_bg]
+        idx_bg = numpy.random.choice(range(len(cat_past_compl)), size=n_events_bg)
+        random_cat = [cat_past_compl[i] for i in idx_bg]
 
         # Sample from recent seismicity
-        idx = numpy.random.choice(range(len(catalog_prev)), size=n_events)
-        random_cat.extend([catalog_prev[i] for i in idx])
+        idx = numpy.random.choice(range(len(cat_prev_thresh)), size=n_events)
+        random_cat.extend([cat_prev_thresh[i] for i in idx])
 
         for i, event in enumerate(random_cat):
             # Locations remain the same as in the randomly sampled catalog
