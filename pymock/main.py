@@ -13,6 +13,10 @@ def default_args_path():
     return Path(pymock.__file__).parent.parent / 'input' / 'args.txt'
 
 
+def default_forecast_folder():
+    return Path(pymock.__file__).parent.parent / 'forecasts'
+
+
 def main(arg_path=None, folder=None, verbose=False):
     """
     Main pymock's function
@@ -33,7 +37,8 @@ def main(arg_path=None, folder=None, verbose=False):
         arg_path = default_args_path()
 
     # Create a forecasts folder in current directory if it does not exist.
-    folder = folder or os.path.join(os.path.dirname(arg_path), '../forecasts')
+    if folder is None:
+        folder = default_forecast_folder()
     os.makedirs(folder, exist_ok=True)
 
     # 1. Gets input data and arguments.
