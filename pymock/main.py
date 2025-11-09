@@ -1,8 +1,16 @@
 import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
+
 import numpy
+import pymock
+
 from pymock import libs
+
+
+def default_args_path():
+    return Path(pymock.__file__).parent.parent / 'input' / 'args.txt'
 
 
 def main(arg_path=None, folder=None, verbose=False):
@@ -20,6 +28,9 @@ def main(arg_path=None, folder=None, verbose=False):
         folder (str): (Optional) Path to save output. Defaults to 'forecasts'
         verbose (bool): print log
     """
+
+    if arg_path is None:
+        arg_path = default_args_path()
 
     # Create a forecasts folder in current directory if it does not exist.
     folder = folder or os.path.join(os.path.dirname(arg_path), '../forecasts')

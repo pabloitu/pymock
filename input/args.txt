@@ -1,21 +1,19 @@
 # pymock input arguments #
 
-## Experiment obligatory parameters. They should have a default value##
+## Experiment obligatory parameters. They should have a default value
 
 ### Testing time window 1 day
 start_date = 2018-07-02T00:00:00
 end_date = 2018-07-03T00:00:00
 catalog = catalog.csv
 seed = 23
-n_sims = 100
-
+n_sims = 1000
 mag_min = 4.0
 
-## Optional parameters (here: default values)
+### Optional parameters (param: default values)
+distribution = poisson  # poisson/negbinom
 
-distribution = poisson
-
-### Additional parameters to create pymock variants
+#### Additional parameters to create pymock variants
 lookback_days = 1
 mag_compl = 2.0
 apply_mc_to_lambda = False
