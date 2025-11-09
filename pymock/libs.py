@@ -2,19 +2,16 @@ from datetime import datetime, time
 import os
 
 
-def syncat_path(start, end, folder):
+def syncat_path(start, end, folder, variant='long'):
     """
     Returns the file path of a forecast based on its start and end dates.
     """
-
-    variant = 'long'
-    variant = 'short'  # hardcode
 
     if variant == 'short':
         return os.path.join(folder, f'pymock_{start.date().isoformat()}.csv')
 
     # Long version
-    filename = f"pymock_{start.isoformat()}_{end.isoformat()}.csv"
+    filename = f"pymock_{start.date().isoformat()}_{end.date().isoformat()}.csv"
     if os.name == 'nt':
         filename.replace(':', '.')  # on Windows, filenames cannot contain ':'
     return os.path.join(folder, filename)
