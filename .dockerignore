@@ -1,1 +1,8 @@
+.git
+input
 forecasts
+examples
+docs
+tests
+*.egg-info
+__pycache__
